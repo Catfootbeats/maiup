@@ -1,5 +1,9 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.*
+
+// 从 gradle.properties 或外部文件读取版本号
+val appVersionName = project.properties["versionName"] as? String ?: "0"
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -7,6 +11,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    id("com.codingfeline.buildkonfig")
 }
 
 kotlin {
@@ -46,6 +51,7 @@ kotlin {
             implementation("org.jetbrains.compose.material3:material3-adaptive-navigation-suite:1.7.0")
             implementation("org.jetbrains.compose.material:material:1.10.0")          // 基础 Material 组件 + 核心图标
             implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
+            implementation("io.insert-koin:koin-core:4.1.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -66,7 +72,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = appVersionName
     }
     packaging {
         resources {
@@ -95,7 +101,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "xyz.catfootbeats.maiup"
-            packageVersion = "1.0.0"
+            packageVersion = appVersionName
         }
     }
 }
@@ -104,4 +110,15 @@ compose.resources {
     publicResClass = false
     packageOfResClass = "xyz.catfootbeats.maiup.resources"
     generateResClass = auto
+}
+
+buildkonfig {
+    packageName = "xyz.catfootbeats.maiup"
+    objectName = "AppConfig"
+    defaultConfigs {
+
+
+        // 定义字段：类型、字段名、值
+        buildConfigField(STRING, "VERSION_NAME", appVersionName) // 注意字符串需要转义引号
+    }
 }

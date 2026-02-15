@@ -16,14 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import xyz.catfootbeats.maiup.utils.getAppVersion
+import xyz.catfootbeats.maiup.AppConfig
+import xyz.catfootbeats.maiup.utils.openUrl
 
 @Composable
 fun SettingsPage(){
     var lxnsApiKey by remember { mutableStateOf("") }
     var waterfishToken by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
-    val appVersion = getAppVersion()
     
     LazyColumn(
         modifier = Modifier
@@ -37,13 +37,6 @@ fun SettingsPage(){
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
-        item {
-            SettingsCard("外观"){
-                SettingItemRow("主题"){
-                    ThemeToggle()
-                }
-            }
-        }
         item {
             SettingsCard("查分器","数据来自落雪查分器，水鱼仅同步成绩。"){
                 SettingItemColumn("落雪 API 密钥"){
@@ -69,8 +62,15 @@ fun SettingsPage(){
             }
         }
         item {
+            SettingsCard("外观"){
+                SettingItemRow("主题"){
+                    ThemeToggle()
+                }
+            }
+        }
+        item {
             SettingsCard("关于 MaiUp"){
-                SettingItemRow("Version: $appVersion"){
+                SettingItemRow("Version: ${AppConfig.VERSION_NAME}"){
                     TextButton(
                         onClick = { /* TODO 检查更新 */ },
                     ){
@@ -79,7 +79,7 @@ fun SettingsPage(){
                 }
                 SettingItemRow("查看源代码"){
                     TextButton(
-                        onClick = { /* TODO 跳转源码 */ },
+                        onClick = { openUrl("https://github.com/Catfootbeats/maiup") },
                     ){
                         Text("GitHub")
                     }
@@ -169,7 +169,6 @@ fun ThemeToggle() {
     Box {
         TextButton(
             onClick = { expanded = true },
-            contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
                 Text(
                     text = when (selectedTheme) {
@@ -178,11 +177,11 @@ fun ThemeToggle() {
                         ThemeMode.SYSTEM -> "跟随系统"
                     }
                 )
+            /*
                 Icon(
                     imageVector = Icons.Filled.ArrowDropDown,
                     contentDescription = "展开菜单",
-                    modifier = Modifier.padding(start = 4.dp)
-                )
+                )*/
         }
         
         DropdownMenu(
