@@ -32,7 +32,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
-
+            implementation("androidx.datastore:datastore-preferences:1.2.0")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -44,8 +44,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation("org.jetbrains.compose.material3:material3-adaptive-navigation-suite:1.7.0")
-            implementation(compose.material)          // 基础 Material 组件 + 核心图标
-            implementation(compose.materialIconsExtended)
+            implementation("org.jetbrains.compose.material:material:1.10.0")          // 基础 Material 组件 + 核心图标
+            implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -53,7 +53,6 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
-            implementation("com.mayakapps.compose:window-styler:0.3.2")
         }
     }
 }

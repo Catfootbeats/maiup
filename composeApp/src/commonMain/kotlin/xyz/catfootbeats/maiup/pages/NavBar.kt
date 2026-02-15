@@ -1,49 +1,15 @@
 package xyz.catfootbeats.maiup.pages
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DataExploration
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
@@ -58,8 +24,8 @@ enum class AppDestinations(
     val icon: ImageVector,
     val desc: String,
     ) {
-    // 主页 直接显示用户的成绩 头像 收藏品 背景框 点击即可跳转更新成绩 可以改变中二模式和舞萌模式
-    HOME("主页", Icons.Default.Home,"账号详情"),
+    // 首页 直接显示用户的成绩 头像 收藏品 背景框 点击即可跳转更新成绩 可以改变中二模式和舞萌模式
+    HOME("首页", Icons.Default.Home,"账号详情"),
     // 搜索 可以查找游玩的歌曲
     SEARCH("搜索", Icons.Default.MusicNote,"乐曲搜索"),
     // 成绩 可以查看 b50 与 历史成绩
@@ -73,6 +39,7 @@ enum class AppDestinations(
 fun NavBar(){
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var expanded by rememberSaveable { mutableStateOf(false) }
+    var modeStr by remember { mutableStateOf("中二节奏") }// TODO实现模式更改
 
     NavigationSuiteScaffold(
         modifier = Modifier,
@@ -95,7 +62,7 @@ fun NavBar(){
             }
         }
     ) {
-        Column {
+        Column{
             TopAppBar(
                 title = {
                     Text(
@@ -122,12 +89,12 @@ fun NavBar(){
                                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             ),
-                            modifier = Modifier.padding(end = 10.dp)
+                            modifier = Modifier.padding(end = 10.dp) //为了让尾部和卡片对齐
                         ) {
                                 Text(
-                                    text = "中二节奏",
+                                    text = modeStr,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(end = 4.dp)
+                                    modifier = Modifier.width(60.dp)
                                 )
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
@@ -137,40 +104,36 @@ fun NavBar(){
                         DropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
-                            offset = DpOffset(60.dp, 0.dp),
+                            offset = DpOffset(50.dp, 0.dp),
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             DropdownMenuItem(
-                                text = {
-                                    Row(
-                                        horizontalArrangement = Arrangement.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ){
-                                        Image(
-                                            painter = painterResource(Res.drawable.chu),
-                                            contentDescription = "中二节奏",
-                                            modifier = Modifier.height(20.dp).padding(end = 4.dp)
-                                        )
-                                        Text("中二节奏")
-                                    }
-                                       },
-                                onClick = { /* TODO: 切换到中二节奏模式 */ }
+                                leadingIcon = {
+                                    Image(
+                                        painter = painterResource(Res.drawable.chu),
+                                        contentDescription = "中二节奏",
+                                        modifier = Modifier.height(24.dp)
+                                    )
+                                },
+                                text = { Text("中二节奏") },
+                                onClick = {
+                                    expanded = false
+                                    modeStr = "中二节奏"
+                                /* TODO: 切换到中二节奏模式 */ }
                             )
                             DropdownMenuItem(
-                                text = {
-                                    Row(
-                                        horizontalArrangement = Arrangement.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Image(
-                                            painter = painterResource(Res.drawable.mai),
-                                            contentDescription = "舞萌DX",
-                                            modifier = Modifier.height(20.dp).padding(end = 4.dp)
-                                        )
-                                        Text("舞萌DX")
-                                    }
-                                       },
-                                onClick = { /* TODO: 切换到舞萌DX模式 */ }
+                                leadingIcon = {
+                                    Image(
+                                        painter = painterResource(Res.drawable.mai),
+                                        contentDescription = "舞萌DX",
+                                        modifier = Modifier.height(24.dp)
+                                    )
+                                },
+                                text = { Text("舞萌DX") },
+                                onClick = {
+                                    expanded = false
+                                    modeStr = "舞萌DX"
+                                /* TODO: 切换到舞萌DX模式 */ }
                             )
                         }
                 }
