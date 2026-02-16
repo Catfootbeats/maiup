@@ -66,7 +66,7 @@ fun SettingsPage(){
         item {
             SettingsCard("外观"){
                 SettingItemRow("主题"){
-                    ThemeToggle()
+                    ThemeToggler(vm)
                 }
             }
         }
@@ -159,16 +159,16 @@ fun SettingItemColumn(text: String, content: (@Composable ColumnScope.() -> Unit
     }
 }
 @Composable
-fun ThemeToggle() {
+fun ThemeToggler(vm: MaiupViewModel) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedTheme by remember { mutableStateOf(ThemeMode.SYSTEM) }
+    val settings = vm.settingsState.collectAsState()
 
     Box {
         TextButton(
             onClick = { expanded = true },
         ) {
                 Text(
-                    text = when (selectedTheme) {
+                    text = when (settings.value.themeMode) {
                         ThemeMode.LIGHT -> "浅色模式"
                         ThemeMode.DARK -> "深色模式"
                         ThemeMode.SYSTEM -> "跟随系统"
@@ -189,7 +189,7 @@ fun ThemeToggle() {
             DropdownMenuItem(
                 text = { Text("跟随系统") },
                 onClick = {
-                    selectedTheme = ThemeMode.SYSTEM
+                    vm.updateTheme(ThemeMode.SYSTEM)
                     expanded = false
                 },
                 leadingIcon = {
@@ -202,7 +202,7 @@ fun ThemeToggle() {
             DropdownMenuItem(
                 text = { Text("浅色模式") },
                 onClick = {
-                    selectedTheme = ThemeMode.LIGHT
+                    vm.updateTheme(ThemeMode.LIGHT)
                     expanded = false
                 },
                 leadingIcon = {
@@ -215,7 +215,7 @@ fun ThemeToggle() {
             DropdownMenuItem(
                 text = { Text("深色模式") },
                 onClick = {
-                    selectedTheme = ThemeMode.DARK
+                    vm.updateTheme(ThemeMode.DARK)
                     expanded = false
                 },
                 leadingIcon = {

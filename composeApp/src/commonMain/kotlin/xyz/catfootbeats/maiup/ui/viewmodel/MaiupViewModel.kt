@@ -1,5 +1,7 @@
 package xyz.catfootbeats.maiup.ui.viewmodel
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +20,7 @@ class MaiupViewModel(
     val settingsState = MutableStateFlow( MaiupSettings() )
     init {
         viewModelScope.launch {
-            settingsState.value = preferenceRepository.settings.first()
+             settingsState.value = preferenceRepository.settings.first()
         }
     }
 
