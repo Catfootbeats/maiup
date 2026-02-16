@@ -1,4 +1,4 @@
-package xyz.catfootbeats.maiup.pages
+package xyz.catfootbeats.maiup.ui.pages
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*

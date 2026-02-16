@@ -37,7 +37,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
-            implementation("androidx.datastore:datastore-preferences:1.2.0")
+
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -48,10 +48,14 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation("org.jetbrains.compose.material3:material3-adaptive-navigation-suite:1.7.0")
+            api(libs.androidx.lifecycle.viewmodel)
+            implementation("org.jetbrains.compose.material3:material3-adaptive-navigation-suite:1.9.0")
             implementation("org.jetbrains.compose.material:material:1.10.0")          // 基础 Material 组件 + 核心图标
             implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
             implementation("io.insert-koin:koin-core:4.1.0")
+            implementation("io.insert-koin:koin-compose:4.1.0")
+            implementation("io.insert-koin:koin-compose-viewmodel:4.1.0")
+            implementation("androidx.datastore:datastore-preferences:1.2.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

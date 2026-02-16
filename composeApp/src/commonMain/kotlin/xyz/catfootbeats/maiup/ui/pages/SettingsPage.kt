@@ -1,11 +1,10 @@
-package xyz.catfootbeats.maiup.pages
+package xyz.catfootbeats.maiup.ui.pages
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
@@ -16,13 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import org.koin.compose.viewmodel.koinViewModel
 import xyz.catfootbeats.maiup.AppConfig
+import xyz.catfootbeats.maiup.data.ThemeMode
+import xyz.catfootbeats.maiup.ui.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.utils.openUrl
 
 @Composable
 fun SettingsPage(){
-    var lxnsApiKey by remember { mutableStateOf("") }
-    var waterfishToken by remember { mutableStateOf("") }
+    val vm: MaiupViewModel = koinViewModel()
+    val settings = vm.settingsState.collectAsState()
     val focusManager = LocalFocusManager.current
     
     LazyColumn(
@@ -42,8 +44,8 @@ fun SettingsPage(){
                 SettingItemColumn("落雪 API 密钥"){
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = lxnsApiKey,
-                        onValueChange = { lxnsApiKey = it },
+                        value = settings.value.lxnsAPI,
+                        onValueChange = { vm.updateLxnsAPI(it) },
                         placeholder = { Text("请输入API密钥") },
                         singleLine = true,
                         shape = RoundedCornerShape(8.dp),
@@ -52,8 +54,8 @@ fun SettingsPage(){
                 SettingItemColumn("水鱼成绩导入 Token"){
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
-                        value = waterfishToken,
-                        onValueChange = { waterfishToken = it },
+                        value = settings.value.waterfishToken,
+                        onValueChange = { vm.updateWaterfishToken(it) },
                         placeholder = { Text("请输入Token") },
                         singleLine = true,
                         shape = RoundedCornerShape(8.dp),
@@ -156,11 +158,6 @@ fun SettingItemColumn(text: String, content: (@Composable ColumnScope.() -> Unit
         content()
     }
 }
-
-enum class ThemeMode {
-    LIGHT, DARK, SYSTEM
-}
-
 @Composable
 fun ThemeToggle() {
     var expanded by remember { mutableStateOf(false) }

@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
+import xyz.catfootbeats.maiup.di.appModule
 
 
 class MainActivity : ComponentActivity() {
@@ -32,8 +33,7 @@ class MainActivity : ComponentActivity() {
             }
 
             modules(
-                contextModule,
-                //appModule() // 这是你的共享模块，定义在 commonMain
+                contextModule + appModule // 共享模块 定义在 commonMain
             )
         }
         setContent {

@@ -1,4 +1,4 @@
-package xyz.catfootbeats.maiup.theme
+package xyz.catfootbeats.maiup.ui.theme
 
 import androidx.compose.material3.Typography
 
