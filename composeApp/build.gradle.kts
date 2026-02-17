@@ -64,6 +64,11 @@ kotlin {
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
             // Kotlinx 序列化
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+            // 在线图片
+            implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+            implementation("io.coil-kt.coil3:coil-network-ktor2:3.3.0")
+            // 图表
+            implementation ("io.github.ehsannarmani:compose-charts:0.2.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

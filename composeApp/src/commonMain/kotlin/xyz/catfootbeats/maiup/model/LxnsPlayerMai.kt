@@ -25,7 +25,7 @@ data class LxnsPlayerMai(
     val class_rank: Int = 0,
     val star: Int = 0,
     val trophy: Trophy = Trophy(0,"","",""),
-    val icon: Icon = Icon(0,"",""),
+    val icon: Icon = Icon(1,"",""),
     val name_plate: NamePlate = NamePlate(0,"",""),
     val frame: Frame = Frame(0,"",""),
     val upload_time: String = "未知"

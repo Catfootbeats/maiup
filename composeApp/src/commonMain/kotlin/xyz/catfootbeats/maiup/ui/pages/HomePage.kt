@@ -1,7 +1,7 @@
 package xyz.catfootbeats.maiup.ui.pages
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.EaseInOutCubic
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,26 +10,24 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Api
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import org.jetbrains.compose.resources.DrawableResource
+import coil3.compose.AsyncImage
+import ir.ehsannarmani.compose_charts.LineChart
+import ir.ehsannarmani.compose_charts.models.*
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
+import xyz.catfootbeats.maiup.model.RatingTrend
 import xyz.catfootbeats.maiup.resources.Res
-import xyz.catfootbeats.maiup.resources.mai
+import xyz.catfootbeats.maiup.resources.default_avatar
+import xyz.catfootbeats.maiup.utils.convertUtcToPlus8
 import xyz.catfootbeats.maiup.utils.openUrl
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
@@ -39,6 +37,7 @@ fun HomePage() {
     val maiupViewModel: MaiupViewModel = koinViewModel()
     val playerDataViewModel: PlayerDataViewModel = koinViewModel()
     val playerInfo by playerDataViewModel.lxnsPlayerMaiInfo.collectAsState()
+    val ratingTrend by playerDataViewModel.lxnsRatingTrend.collectAsState()
     val dataError by playerDataViewModel.error.collectAsState()
     val settings by maiupViewModel.settingsState.collectAsState()
 
@@ -46,6 +45,7 @@ fun HomePage() {
     LaunchedEffect(settings.lxnsToken) {
         if (settings.lxnsToken.isNotEmpty()) {
             playerDataViewModel.loadPlayerLxns(settings.lxnsToken)
+            playerDataViewModel.loadRatingTrend(settings.lxnsToken)
         }
     }
 
@@ -63,7 +63,7 @@ fun HomePage() {
         item {
             // 玩家信息卡片
             PlayerInfoCardMai(
-                avatar = Res.drawable.mai, // 替换为实际头像URL
+                avatarId = playerInfo.icon.id,
                 playerId = playerInfo.name,
                 rating = playerInfo.rating,
                 syncDate = playerInfo.upload_time
@@ -71,10 +71,10 @@ fun HomePage() {
         }
         item {
             // Rating趋势图卡片
-            RatingTrendCard()
+            RatingTrendCard(ratingTrend)
         }
         item {
-            // Rating趋势图卡片
+            // 工具卡片
             OthersCard()
         }
     }
@@ -82,7 +82,7 @@ fun HomePage() {
 
 @Composable
 fun PlayerInfoCardMai(
-    avatar: DrawableResource,
+    avatarId: Int,
     playerId: String,
     rating: Int,
     syncDate: String
@@ -106,10 +106,11 @@ fun PlayerInfoCardMai(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // 玩家头像
-            Image(
-                painter = painterResource(avatar),
-                contentDescription = "头像",
-                modifier = Modifier.size(100.dp)
+            AsyncImage(
+                model = "https://assets2.lxns.net/maimai/icon/$avatarId.png",
+                contentDescription = null,
+                modifier = Modifier.size(100.dp),
+                error = painterResource(Res.drawable.default_avatar)
             )
             // 玩家信息
             Column(
@@ -125,7 +126,7 @@ fun PlayerInfoCardMai(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "同步日期: $syncDate",
+                    text = "同步日期: ${convertUtcToPlus8(syncDate)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -135,7 +136,7 @@ fun PlayerInfoCardMai(
 }
 
 @Composable
-fun RatingTrendCard() {
+fun RatingTrendCard(ratingTrendList:List<RatingTrend>?) {
     Card(
         modifier = Modifier
             .width(500.dp)
@@ -157,22 +158,58 @@ fun RatingTrendCard() {
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-
-            // 这里可以集成实际的图表库，如 Victor 或 Compose Charts
-            // 临时用占位符显示
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    ),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Rating 趋势图区域",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if(ratingTrendList!=null) {
+                    LineChart(
+                        modifier = Modifier.fillMaxSize(),
+                        data = remember(ratingTrendList) {
+                            listOf(
+                                Line(
+                                    values = ratingTrendList.map { it.total.toDouble() },
+                                    color = SolidColor(Color(0xFF23af92)),
+                                    firstGradientFillColor = Color(0xFF2BC0A1).copy(alpha = .5f),
+                                    secondGradientFillColor = Color.Transparent,
+                                    strokeAnimationSpec = tween(2000, easing = EaseInOutCubic),
+                                    gradientAnimationDelay = 1000,
+                                    drawStyle = DrawStyle.Stroke(width = 2.dp), // 线条粗细
+                                )
+                            )
+                        },
+                        indicatorProperties = HorizontalIndicatorProperties(
+                            textStyle = MaterialTheme.typography.labelSmall
+                                .copy(color = MaterialTheme.colorScheme.onBackground),
+                            position = IndicatorPosition.Horizontal.End,
+                            contentBuilder = { indicator ->
+                                indicator.toInt().toString()
+                            },
+                            padding = 4.dp
+                        ),
+                        labelProperties = LabelProperties(
+                            enabled = true,
+                            textStyle = MaterialTheme.typography.labelSmall
+                                .copy(color = MaterialTheme.colorScheme.onBackground),
+                            labels = ratingTrendList
+                                .filterIndexed { index, _ -> index % ratingTrendList.size/4 == 0 }
+                                .map { it.date },
+                            padding = 4.dp
+                        ),
+                        maxValue = ratingTrendList.map { it.total.toDouble() }.max()+100.0,
+                        minValue = if((ratingTrendList.map { it.total.toDouble() }.min()-100.0)<0)
+                        {0.0}
+                        else{
+                            ratingTrendList.map { it.total.toDouble() }.min()-100.0
+                        },
+                        animationMode = AnimationMode.Together(delayBuilder = { it * 500L }),
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }

@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
-import xyz.catfootbeats.maiup.data.AppMode
+import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.resources.Res
 import xyz.catfootbeats.maiup.resources.chu
 import xyz.catfootbeats.maiup.resources.mai
@@ -190,9 +190,9 @@ fun NavBar(){
                             modifier = Modifier.padding(end = 10.dp) //为了让尾部和卡片对齐
                         ) {
                                 Text(
-                                    text = when (settings.appMode) {
-                                        AppMode.CHU -> "中二节奏"
-                                        AppMode.MAI -> "舞萌DX"
+                                    text = when (settings.game) {
+                                        Game.CHU -> "中二节奏"
+                                        Game.MAI -> "舞萌DX"
                                     },
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.width(60.dp)
@@ -219,7 +219,7 @@ fun NavBar(){
                                 text = { Text("中二节奏") },
                                 onClick = {
                                     expanded = false
-                                    maiupViewModel.updateAppMode(AppMode.CHU)
+                                    maiupViewModel.updateAppMode(Game.CHU)
                                 }
                             )
                             DropdownMenuItem(
@@ -233,7 +233,7 @@ fun NavBar(){
                                 text = { Text("舞萌DX") },
                                 onClick = {
                                     expanded = false
-                                    maiupViewModel.updateAppMode(AppMode.MAI)
+                                    maiupViewModel.updateAppMode(Game.MAI)
                                 }
                             )
                         }

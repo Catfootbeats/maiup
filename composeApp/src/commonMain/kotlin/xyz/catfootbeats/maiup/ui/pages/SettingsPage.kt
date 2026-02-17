@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
 import xyz.catfootbeats.maiup.AppConfig
-import xyz.catfootbeats.maiup.data.ThemeMode
+import xyz.catfootbeats.maiup.model.ThemeMode
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.utils.openUrl
 

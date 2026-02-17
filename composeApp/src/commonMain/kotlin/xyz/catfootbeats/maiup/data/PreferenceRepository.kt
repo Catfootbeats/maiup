@@ -6,20 +6,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-
-enum class ThemeMode{
-    LIGHT,DARK,SYSTEM
-}
-
-enum class AppMode{
-    CHU,MAI
-}
+import xyz.catfootbeats.maiup.model.Game
+import xyz.catfootbeats.maiup.model.ThemeMode
 
 data class MaiupSettings(
     val lxnsToken: String = "",
     val waterfishToken: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val appMode: AppMode = AppMode.MAI
+    val game: Game = Game.MAI
 )
 
 class PreferenceRepository(
@@ -29,7 +23,7 @@ class PreferenceRepository(
         const val DEFAULT_LXNS_API = ""
         const val DEFAULT_WATERFISH_TOKEN = ""
         val DEFAULT_THEME_MODE = ThemeMode.SYSTEM
-        val DEFAULT_APP_MODE = AppMode.CHU
+        val DEFAULT_APP_MODE = Game.CHU
     }
 
     private val lxnsAPIKey = stringPreferencesKey("lxns_api")
@@ -47,16 +41,16 @@ class PreferenceRepository(
                 DEFAULT_THEME_MODE
             },
             try {
-                AppMode.valueOf(it[appModeKey] ?: DEFAULT_APP_MODE.name)
+                Game.valueOf(it[appModeKey] ?: DEFAULT_APP_MODE.name)
             } catch (_: IllegalArgumentException){
                 DEFAULT_APP_MODE
             }
         )
     }
 
-    suspend fun updateAppMode(appMode: AppMode) {
+    suspend fun updateAppMode(game: Game) {
         dataStore.edit{
-            it[appModeKey] = appMode.name
+            it[appModeKey] = game.name
         }
     }
     suspend fun updateTheme(themeMode: ThemeMode){

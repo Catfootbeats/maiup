@@ -44,6 +44,21 @@ data class Frame(
 )
 
 /**
+ * Rating 趋势数据
+ * @property total 总 Rating
+ * @property standard_total 标准 Rating
+ * @property dx_total DX Rating
+ * @property date 日期
+ */
+@Serializable
+data class RatingTrend(
+    val total: Int,
+    val standard_total: Int,
+    val dx_total: Int,
+    val date: String
+)
+
+/**
  * API 响应包装类
  */
 @Serializable

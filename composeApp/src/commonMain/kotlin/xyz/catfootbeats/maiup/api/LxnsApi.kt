@@ -5,7 +5,10 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import xyz.catfootbeats.maiup.model.ApiResponse
+import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.model.LxnsPlayerMai
+import xyz.catfootbeats.maiup.model.RatingTrend
+import xyz.catfootbeats.maiup.model.getName
 
 /**
  * 玩家数据 API
@@ -22,9 +25,23 @@ class LxnsApi(
      * @param userToken 用户 Token，用于 API 认证
      * @return API 响应，包含玩家信息
      */
-    suspend fun getPlayerInfoMai(userToken: String): ApiResponse<LxnsPlayerMai> {
-        return client.get("$baseUrl/user/maimai/player") {
+    suspend fun getPlayerInfo(userToken: String, game: Game = Game.MAI): ApiResponse<LxnsPlayerMai> {
+        return client.get("$baseUrl/user/${game.getName()}/player") {
             header("X-User-Token", userToken)
+            contentType(ContentType.Application.Json)
+        }.body()
+    }
+
+    /**
+     * 获取玩家 Rating 趋势
+     * @param userToken 用户 Token，用于 API 认证
+     * @param version 游戏版本号，默认为 25000
+     * @return API 响应，包含 Rating 趋势数据列表
+     */
+    suspend fun getPlayerTrend(userToken: String, game: Game = Game.MAI, version: Int = 25000): ApiResponse<List<RatingTrend>> {
+        return client.get("$baseUrl/user/${game.getName()}/player/trend") {
+            header("X-User-Token", userToken)
+            parameter("version", version)
             contentType(ContentType.Application.Json)
         }.body()
     }

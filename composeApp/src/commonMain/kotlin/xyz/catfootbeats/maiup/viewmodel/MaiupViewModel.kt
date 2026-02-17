@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import xyz.catfootbeats.maiup.data.AppMode
+import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.data.MaiupSettings
 import xyz.catfootbeats.maiup.data.PreferenceRepository
-import xyz.catfootbeats.maiup.data.ThemeMode
+import xyz.catfootbeats.maiup.model.ThemeMode
 
 class MaiupViewModel(
     private val preferenceRepository: PreferenceRepository
@@ -23,9 +23,9 @@ class MaiupViewModel(
         }
     }
 
-    fun updateAppMode(appMode: AppMode){
-        _settingsState.value = _settingsState.value.copy(appMode=appMode)
-        viewModelScope.launch { preferenceRepository.updateAppMode(appMode) }
+    fun updateAppMode(game: Game){
+        _settingsState.value = _settingsState.value.copy(game=game)
+        viewModelScope.launch { preferenceRepository.updateAppMode(game) }
     }
     fun updateTheme(themeMode: ThemeMode){
         _settingsState.value = _settingsState.value.copy(themeMode=themeMode)
