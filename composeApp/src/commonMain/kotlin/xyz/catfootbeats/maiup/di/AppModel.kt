@@ -18,7 +18,7 @@ import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 val appModule = module {
     // ViewModel
     viewModel { MaiupViewModel(get()) }
-    viewModel { PlayerDataViewModel(get()) }
+    viewModel { PlayerDataViewModel(get(),get()) }
 
     // DataStore
     singleOf(::DataStoreFactory)

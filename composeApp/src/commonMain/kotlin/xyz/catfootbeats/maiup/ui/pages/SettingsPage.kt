@@ -3,6 +3,8 @@ package xyz.catfootbeats.maiup.ui.pages
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrightnessAuto
@@ -12,13 +14,18 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
 import xyz.catfootbeats.maiup.AppConfig
+import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 import xyz.catfootbeats.maiup.model.ThemeMode
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.utils.openUrl
@@ -28,6 +35,11 @@ fun SettingsPage(){
     val vm: MaiupViewModel = koinViewModel()
     val settings by vm.settingsState.collectAsState()
     val focusManager = LocalFocusManager.current
+    val playerDataViewModel: PlayerDataViewModel = koinViewModel()
+    
+    // 防抖处理
+    val coroutineScope = rememberCoroutineScope()
+    var debounceJob by rememberSaveable { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     
     LazyColumn(
         modifier = Modifier
@@ -46,7 +58,18 @@ fun SettingsPage(){
                 SettingItemColumn("落雪 API 密钥"){
                     PasswordTextField(
                         value = settings.lxnsToken,
-                        onValueChange = { vm.updateLxnsAPI(it) },
+                        onValueChange = { 
+                            vm.updateLxnsAPI(it)
+                            // 防抖:取消之前的任务,启动新的任务
+                            debounceJob?.cancel()
+                            debounceJob = coroutineScope.launch {
+                                delay(3000)
+                                // 检查token是否在3秒内没有变化
+                                if (settings.lxnsToken == it) {
+                                    playerDataViewModel.reload(it)
+                                }
+                            }
+                        },
                         placeholder = "请输入API密钥"
                     )
                 }
@@ -241,9 +264,9 @@ fun PasswordTextField(
         singleLine = true,
         shape = RoundedCornerShape(8.dp),
         visualTransformation = if (passwordVisible) {
-            androidx.compose.ui.text.input.VisualTransformation.None
+            VisualTransformation.None
         } else {
-            androidx.compose.ui.text.input.PasswordVisualTransformation()
+            PasswordVisualTransformation()
         },
         trailingIcon = {
             IconButton(onClick = { passwordVisible = !passwordVisible }) {

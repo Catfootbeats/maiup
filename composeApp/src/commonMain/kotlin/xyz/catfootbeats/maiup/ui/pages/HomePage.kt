@@ -1,7 +1,10 @@
 package xyz.catfootbeats.maiup.ui.pages
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +21,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import ir.ehsannarmani.compose_charts.LineChart
@@ -34,19 +39,64 @@ import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 
 @Composable
 fun HomePage() {
-    val maiupViewModel: MaiupViewModel = koinViewModel()
     val playerDataViewModel: PlayerDataViewModel = koinViewModel()
+    val maiupViewModel: MaiupViewModel = koinViewModel()
+    val settings by maiupViewModel.settingsState.collectAsState()
+    val isLoad by playerDataViewModel.isLoad.collectAsState()
     val playerInfo by playerDataViewModel.lxnsPlayerMaiInfo.collectAsState()
     val ratingTrend by playerDataViewModel.lxnsRatingTrend.collectAsState()
     val dataError by playerDataViewModel.error.collectAsState()
-    val settings by maiupViewModel.settingsState.collectAsState()
 
-    // 只在 lxnsToken 有值时才加载数据
-    LaunchedEffect(settings.lxnsToken) {
-        if (settings.lxnsToken.isNotEmpty()) {
-            playerDataViewModel.loadPlayerLxns(settings.lxnsToken)
-            playerDataViewModel.loadRatingTrend(settings.lxnsToken)
+    // 检测lxnsToken是否为空
+    var showTokenDialog by remember { mutableStateOf(false) }
+    var tokenInput by remember { mutableStateOf("") }
+    var settingsLoaded by remember { mutableStateOf(false) }
+
+    // 等待设置加载完成并延迟一秒
+    LaunchedEffect(settings) {
+        if (!settingsLoaded) {
+            settingsLoaded = true
+            // 延迟一秒后再检测
+            kotlinx.coroutines.delay(1000)
+            showTokenDialog = settings.lxnsToken.isEmpty()
+            tokenInput = settings.lxnsToken
         }
+    }
+
+    // Token输入对话框
+    if (showTokenDialog) {
+        AlertDialog(
+            onDismissRequest = { /* 不可点击边缘取消 */ },
+            title = { Text("输入落雪查分器Token") },
+            text = {
+                Column {
+                    Spacer(Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = tokenInput,
+                        onValueChange = { tokenInput = it },
+                        placeholder = { Text("请输入您的落雪查分器Token") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (tokenInput.isNotEmpty()) {
+                            maiupViewModel.updateLxnsAPI(tokenInput)
+                            playerDataViewModel.reload(tokenInput)
+                            showTokenDialog = false
+                        }
+                    },
+                    enabled = tokenInput.isNotEmpty()
+                ) {
+                    Text("确认")
+                }
+            },
+            dismissButton = null // 禁用取消按钮
+        )
     }
 
     LazyColumn(
@@ -55,28 +105,70 @@ fun HomePage() {
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
-        dataError?.let {
-            item {
-                ErrorInfoCard(it,"加载数据错误")
+        item {
+            Anima(dataError!=null){
+                dataError?.let { ErrorInfoCard(it) }
             }
         }
         item {
-            // 玩家信息卡片
-            PlayerInfoCardMai(
-                avatarId = playerInfo.icon.id,
-                playerId = playerInfo.name,
-                rating = playerInfo.rating,
-                syncDate = playerInfo.upload_time
-            )
+            if(!isLoad) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Anima(isLoad){
+                // 玩家信息卡片
+                PlayerInfoCardMai(
+                    avatarId = playerInfo.icon.id,
+                    playerId = playerInfo.name,
+                    rating = playerInfo.rating,
+                    syncDate = playerInfo.upload_time
+                )
+            }
         }
         item {
-            // Rating趋势图卡片
-            RatingTrendCard(ratingTrend)
+            Anima(isLoad) {
+                // Rating趋势图卡片
+                RatingTrendCard(ratingTrend)
+            }
         }
         item {
-            // 工具卡片
-            OthersCard()
+            Anima(isLoad) {
+                // 工具卡片
+                OthersCard()
+            }
         }
+    }
+}
+
+/**
+ * 一个带有动画效果的Composable函数，根据isLoad参数控制内容的显示与隐藏
+ * @param isLoad 布尔值，控制内容是否显示
+ * @param content 当isLoad为true时显示的Composable内容
+ */
+@Composable
+fun Anima(isLoad: Boolean,content: @Composable () -> Unit){
+    // 使用AnimatedVisibility实现动画效果
+    AnimatedVisibility(
+        visible = isLoad, // 根据isLoad参数控制显示状态
+
+        // 定义进入动画
+        enter = fadeIn( // 淡入效果
+            animationSpec = tween(500, delayMillis = 100) // 设置动画持续时间为500毫秒，延迟100毫秒
+        ) + slideInVertically( // 垂直滑入效果
+            animationSpec = tween(500), // 设置动画持续时间为500毫秒
+            initialOffsetY = { it / 2 } // 初始垂直偏移量为自身高度的一半
+        )
+    ) {
+        content() // 当isLoad为true时，显示传入的内容
     }
 }
 
@@ -123,6 +215,7 @@ fun PlayerInfoCardMai(
                 Text(
                     text = "Rating: $rating",
                     style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
