@@ -1,42 +1,72 @@
 package xyz.catfootbeats.maiup.ui.pages
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Api
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
+import xyz.catfootbeats.maiup.resources.Res
+import xyz.catfootbeats.maiup.resources.mai
+import xyz.catfootbeats.maiup.utils.openUrl
+import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
+import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 
 @Composable
 fun HomePage() {
+    val maiupViewModel: MaiupViewModel = koinViewModel()
+    val playerDataViewModel: PlayerDataViewModel = koinViewModel()
+    val playerInfo by playerDataViewModel.lxnsPlayerMaiInfo.collectAsState()
+    val dataError by playerDataViewModel.error.collectAsState()
+    val settings by maiupViewModel.settingsState.collectAsState()
+
+    // 只在 lxnsToken 有值时才加载数据
+    LaunchedEffect(settings.lxnsToken) {
+        if (settings.lxnsToken.isNotEmpty()) {
+            playerDataViewModel.loadPlayerLxns(settings.lxnsToken)
+        }
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
+        dataError?.let {
+            item {
+                ErrorInfoCard(it,"加载数据错误")
+            }
+        }
         item {
             // 玩家信息卡片
-            PlayerInfoCard(
-                avatarUrl = "https://example.com/avatar.png", // 替换为实际头像URL
-                playerId = "Player_123",
-                rating = 114514,
-                syncDate = "1970-01-01 00:00"
+            PlayerInfoCardMai(
+                avatar = Res.drawable.mai, // 替换为实际头像URL
+                playerId = playerInfo.name,
+                rating = playerInfo.rating,
+                syncDate = playerInfo.upload_time
             )
         }
         item {
@@ -51,8 +81,8 @@ fun HomePage() {
 }
 
 @Composable
-fun PlayerInfoCard(
-    avatarUrl: String,
+fun PlayerInfoCardMai(
+    avatar: DrawableResource,
     playerId: String,
     rating: Int,
     syncDate: String
@@ -66,7 +96,7 @@ fun PlayerInfoCard(
             containerColor = MaterialTheme.colorScheme.onSecondary,
             //contentColor = MaterialTheme.colorScheme.secondary
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Row(
             modifier = Modifier
@@ -76,26 +106,17 @@ fun PlayerInfoCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // 玩家头像
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = playerId.first().toString(),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
-
+            Image(
+                painter = painterResource(avatar),
+                contentDescription = "头像",
+                modifier = Modifier.size(100.dp)
+            )
             // 玩家信息
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "玩家ID: $playerId",
+                    text = playerId,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
@@ -124,7 +145,7 @@ fun RatingTrendCard() {
             containerColor = MaterialTheme.colorScheme.onSecondary,
            // contentColor = MaterialTheme.colorScheme.secondary
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
             modifier = Modifier
@@ -161,14 +182,13 @@ fun RatingTrendCard() {
 fun OthersCard() {
     Card(
         modifier = Modifier
-            .height(200.dp)
             .width(500.dp),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.onSecondary,
             // contentColor = MaterialTheme.colorScheme.secondary
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
             modifier = Modifier
@@ -180,23 +200,132 @@ fun OthersCard() {
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-
-            val filters = listOf(
-                "Washer/Dryer", "Ramp access", "Garden", "Cats OK", "Dogs OK", "Smoke-free"
-            )
+            
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                filters.forEach { title ->
-                    var selected by remember { mutableStateOf(false) }
-                    val leadingIcon: @Composable () -> Unit = { Icon(Icons.Default.Check, null) }
-                    FilterChip(
-                        selected,
-                        onClick = { selected = !selected },
-                        label = { Text(title) },
-                        leadingIcon = if (selected) leadingIcon else null
+                val iconItems = remember {
+                    listOf(
+                        IconItemData(
+                            icon = Icons.Default.Map,
+                            text = "音游地图",
+                            webUrl = "https://map.bemanicn.com/"
+                        ),
+                        IconItemData(
+                            icon = Icons.Default.Api,
+                            text = "落雪查分器",
+                            webUrl = "https://maimai.lxns.net/"
+                        ),
+                        IconItemData(
+                            icon = Icons.Default.Api,
+                            text = "水鱼查分器",
+                            webUrl = "https://www.diving-fish.com/maimaidx/prober/"
+                        ),
+                        IconItemData(
+                            icon = Icons.Default.Api,
+                            text = "DXRating",
+                            webUrl = "https://dxrating.net/"
+                        ),
+                        IconItemData(
+                            icon = Icons.Default.Api,
+                            text = "Union",
+                            webUrl = "https://union.godserver.cn/"
+                        ),
                     )
                 }
+
+                iconItems.forEach { item ->
+                    IconGridItem(
+                        icon = item.icon,
+                        text = item.text,
+                        webUrl = item.webUrl,
+                        openExternal = item.openExternal
+                    )
+                }
+            }
+        }
+    }
+}
+
+data class IconItemData(
+    val icon: ImageVector,
+    val text: String,
+    val webUrl: String,
+    val openExternal: Boolean = true
+)
+
+@Composable
+fun IconGridItem(
+    icon: ImageVector,
+    text: String,
+    webUrl: String,
+    openExternal: Boolean = true
+) {
+    Box(
+        modifier = Modifier
+            .clip(shape = RoundedCornerShape(16 .dp))
+            .clickable{
+                if(openExternal){
+                    openUrl(webUrl)
+                }
+            }
+            .size(80.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = text,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+fun ErrorInfoCard(
+    msg: String,
+    title: String = "错误"
+) {
+    Card(
+        modifier = Modifier
+            .width(500.dp)
+            .wrapContentHeight(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            SelectionContainer {
+                Text(
+                    text = msg,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
             }
         }
     }

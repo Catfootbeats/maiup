@@ -8,6 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,13 +20,13 @@ import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
 import xyz.catfootbeats.maiup.AppConfig
 import xyz.catfootbeats.maiup.data.ThemeMode
-import xyz.catfootbeats.maiup.ui.viewmodel.MaiupViewModel
+import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.utils.openUrl
 
 @Composable
 fun SettingsPage(){
     val vm: MaiupViewModel = koinViewModel()
-    val settings = vm.settingsState.collectAsState()
+    val settings by vm.settingsState.collectAsState()
     val focusManager = LocalFocusManager.current
     
     LazyColumn(
@@ -42,23 +44,17 @@ fun SettingsPage(){
         item {
             SettingsCard("查分器","数据来自落雪查分器，水鱼仅同步成绩。"){
                 SettingItemColumn("落雪 API 密钥"){
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = settings.value.lxnsAPI,
+                    PasswordTextField(
+                        value = settings.lxnsToken,
                         onValueChange = { vm.updateLxnsAPI(it) },
-                        placeholder = { Text("请输入API密钥") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
+                        placeholder = "请输入API密钥"
                     )
                 }
                 SettingItemColumn("水鱼成绩导入 Token"){
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        value = settings.value.waterfishToken,
+                    PasswordTextField(
+                        value = settings.waterfishToken,
                         onValueChange = { vm.updateWaterfishToken(it) },
-                        placeholder = { Text("请输入Token") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
+                        placeholder = "请输入Token"
                     )
                 }
             }
@@ -105,7 +101,7 @@ fun SettingsCard(
             containerColor = MaterialTheme.colorScheme.onSecondary,
             //contentColor = MaterialTheme.colorScheme.secondary
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
             modifier = Modifier
@@ -161,14 +157,14 @@ fun SettingItemColumn(text: String, content: (@Composable ColumnScope.() -> Unit
 @Composable
 fun ThemeToggler(vm: MaiupViewModel) {
     var expanded by remember { mutableStateOf(false) }
-    val settings = vm.settingsState.collectAsState()
+    val settings by vm.settingsState.collectAsState()
 
     Box {
         TextButton(
             onClick = { expanded = true },
         ) {
                 Text(
-                    text = when (settings.value.themeMode) {
+                    text = when (settings.themeMode) {
                         ThemeMode.LIGHT -> "浅色模式"
                         ThemeMode.DARK -> "深色模式"
                         ThemeMode.SYSTEM -> "跟随系统"
@@ -227,4 +223,35 @@ fun ThemeToggler(vm: MaiupViewModel) {
             )
         }
     }
+}
+
+@Composable
+fun PasswordTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String
+) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    OutlinedTextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder) },
+        singleLine = true,
+        shape = RoundedCornerShape(8.dp),
+        visualTransformation = if (passwordVisible) {
+            androidx.compose.ui.text.input.VisualTransformation.None
+        } else {
+            androidx.compose.ui.text.input.PasswordVisualTransformation()
+        },
+        trailingIcon = {
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                Icon(
+                    imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                    contentDescription = if (passwordVisible) "隐藏密码" else "显示密码"
+                )
+            }
+        }
+    )
 }

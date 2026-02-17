@@ -15,9 +15,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
+import xyz.catfootbeats.maiup.data.AppMode
 import xyz.catfootbeats.maiup.resources.Res
 import xyz.catfootbeats.maiup.resources.chu
 import xyz.catfootbeats.maiup.resources.mai
+import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 
 enum class AppDestinations(
     val label: String,
@@ -37,9 +40,15 @@ enum class AppDestinations(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavBar(){
+    val maiupViewModel: MaiupViewModel = koinViewModel()
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var expanded by rememberSaveable { mutableStateOf(false) }
-    var modeStr by remember { mutableStateOf("中二节奏") }// TODO实现模式更改
+    var showDialog by remember { mutableStateOf(false) }
+    val settings by maiupViewModel.settingsState.collectAsState()
+    var syncMai by remember { mutableStateOf(true) }
+    var syncChu by remember { mutableStateOf(true) }
+    var syncLxns by remember { mutableStateOf(true) }
+    var syncWaterfish by remember { mutableStateOf(true) }
 
     NavigationSuiteScaffold(
         modifier = Modifier,
@@ -73,10 +82,99 @@ fun NavBar(){
                 },
                 actions = {
                     // 同步按钮
-                    IconButton(onClick = { /* TODO: 实现同步功能 */ }) {
+                    IconButton(onClick = { showDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Sync,
                             contentDescription = "同步"
+                        )
+                    }
+                    // 同步对话框
+                    if (showDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showDialog = false },
+                            title = { Text("同步成绩") },
+                            text = {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Text(
+                                        "来源",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    // 第一排：舞萌DX, 中二节奏
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        FilterChip(
+                                            selected = syncMai,
+                                            onClick = { syncMai = !syncMai },
+                                            label = { Text("舞萌DX") },
+                                            leadingIcon = if (syncMai) {
+                                                { Icon(Icons.Default.Check, contentDescription = null) }
+                                            } else null,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        FilterChip(
+                                            selected = syncChu,
+                                            onClick = { syncChu = !syncChu },
+                                            label = { Text("中二节奏") },
+                                            leadingIcon = if (syncChu) {
+                                                { Icon(Icons.Default.Check, contentDescription = null) }
+                                            } else null,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                    Text(
+                                        "查分器",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    // 第二排：落雪, 水鱼
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        FilterChip(
+                                            selected = syncLxns,
+                                            onClick = { syncLxns = !syncLxns },
+                                            label = { Text("落雪") },
+                                            leadingIcon = if (syncLxns) {
+                                                { Icon(Icons.Default.Check, contentDescription = null) }
+                                            } else null,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        FilterChip(
+                                            selected = syncWaterfish,
+                                            onClick = { syncWaterfish = !syncWaterfish },
+                                            label = { Text("水鱼") },
+                                            leadingIcon = if (syncWaterfish) {
+                                                { Icon(Icons.Default.Check, contentDescription = null) }
+                                            } else null,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        // TODO: 实现同步功能
+                                        showDialog = false
+                                    }
+                                ) {
+                                    Text("同步")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(
+                                    onClick = { showDialog = false }
+                                ) {
+                                    Text("取消")
+                                }
+                            }
                         )
                     }
 
@@ -92,7 +190,10 @@ fun NavBar(){
                             modifier = Modifier.padding(end = 10.dp) //为了让尾部和卡片对齐
                         ) {
                                 Text(
-                                    text = modeStr,
+                                    text = when (settings.appMode) {
+                                        AppMode.CHU -> "中二节奏"
+                                        AppMode.MAI -> "舞萌DX"
+                                    },
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.width(60.dp)
                                 )
@@ -118,8 +219,8 @@ fun NavBar(){
                                 text = { Text("中二节奏") },
                                 onClick = {
                                     expanded = false
-                                    modeStr = "中二节奏"
-                                /* TODO: 切换到中二节奏模式 */ }
+                                    maiupViewModel.updateAppMode(AppMode.CHU)
+                                }
                             )
                             DropdownMenuItem(
                                 leadingIcon = {
@@ -132,8 +233,8 @@ fun NavBar(){
                                 text = { Text("舞萌DX") },
                                 onClick = {
                                     expanded = false
-                                    modeStr = "舞萌DX"
-                                /* TODO: 切换到舞萌DX模式 */ }
+                                    maiupViewModel.updateAppMode(AppMode.MAI)
+                                }
                             )
                         }
                 }

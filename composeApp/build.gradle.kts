@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.kotlinx.serialization)
     id("com.codingfeline.buildkonfig")
 }
 
@@ -37,7 +38,8 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
-
+            // Ktor Android 引擎
+            implementation("io.ktor:ktor-client-okhttp:2.3.7")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -56,6 +58,12 @@ kotlin {
             implementation("io.insert-koin:koin-compose:4.1.0")
             implementation("io.insert-koin:koin-compose-viewmodel:4.1.0")
             implementation("androidx.datastore:datastore-preferences:1.2.0")
+            // Ktor 客户端
+            implementation("io.ktor:ktor-client-core:2.3.7")
+            implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
+            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+            // Kotlinx 序列化
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -63,6 +71,13 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            // Ktor JVM 引擎
+            implementation("io.ktor:ktor-client-cio:2.3.7")
+            implementation("org.slf4j:slf4j-simple:2.0.9")
+        }
+        iosMain.dependencies {
+            // Ktor iOS 引擎
+            implementation("io.ktor:ktor-client-darwin:2.3.7")
         }
     }
 }

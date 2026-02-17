@@ -10,11 +10,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
-import xyz.catfootbeats.maiup.data.PreferenceRepository
 import xyz.catfootbeats.maiup.data.ThemeMode
 import xyz.catfootbeats.maiup.ui.pages.NavBar
 import xyz.catfootbeats.maiup.ui.theme.AppTheme
-import xyz.catfootbeats.maiup.ui.viewmodel.MaiupViewModel
+import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 
 
 @Composable
@@ -22,6 +21,7 @@ import xyz.catfootbeats.maiup.ui.viewmodel.MaiupViewModel
 fun App() {
     val vm: MaiupViewModel = koinViewModel()
     val settings by vm.settingsState.collectAsState()
+
     val darkTheme = when (settings.themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
