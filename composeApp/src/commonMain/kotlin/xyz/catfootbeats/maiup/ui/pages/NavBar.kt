@@ -1,5 +1,7 @@
 package xyz.catfootbeats.maiup.ui.pages
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import xyz.catfootbeats.maiup.model.Game
@@ -21,6 +24,7 @@ import xyz.catfootbeats.maiup.resources.Res
 import xyz.catfootbeats.maiup.resources.chu
 import xyz.catfootbeats.maiup.resources.mai
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
+import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 
 enum class AppDestinations(
     val label: String,
@@ -37,10 +41,53 @@ enum class AppDestinations(
     SETTINGS("设置", Icons.Default.Settings,"设置"),
 }
 
+/**
+ * 为对话框添加缩放和淡入淡出动画效果
+ * @param visible 对话框是否可见
+ * @param content 对话框内容
+ */
+@Composable
+fun AnimatedDialog(
+    visible: Boolean,
+    content: @Composable () -> Unit
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = scaleIn(
+            animationSpec = tween(
+                durationMillis = 300,
+                easing = FastOutSlowInEasing
+            ),
+            initialScale = 0.8f
+        ) + fadeIn(
+            animationSpec = tween(
+                durationMillis = 300,
+                easing = FastOutSlowInEasing
+            )
+        ),
+        exit = scaleOut(
+            animationSpec = tween(
+                durationMillis = 300,
+                easing = FastOutSlowInEasing
+            ),
+            targetScale = 0.8f
+        ) + fadeOut(
+            animationSpec = tween(
+                durationMillis = 300,
+                easing = FastOutSlowInEasing
+            )
+        ),
+        label = "AnimatedDialog"
+    ) {
+        content()
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavBar(){
     val maiupViewModel: MaiupViewModel = koinViewModel()
+    val playerDataViewModel: PlayerDataViewModel = koinViewModel()
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var expanded by rememberSaveable { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
@@ -49,6 +96,148 @@ fun NavBar(){
     var syncChu by remember { mutableStateOf(true) }
     var syncLxns by remember { mutableStateOf(true) }
     var syncWaterfish by remember { mutableStateOf(true) }
+
+    // 检测lxnsToken是否为空
+    var showTokenDialog by remember { mutableStateOf(false) }
+    var tokenInput by remember { mutableStateOf("") }
+
+    // 等待设置加载完成并延迟一秒
+    LaunchedEffect(settings) {
+            // 延迟一秒后再检测
+            delay(1000)
+            showTokenDialog = settings.lxnsToken.isEmpty()
+            tokenInput = settings.lxnsToken
+    }
+    // Token输入对话框
+    AnimatedDialog(
+        visible = showTokenDialog && currentDestination != AppDestinations.SETTINGS
+    ) {
+        var placeholder = "不输用不了喵~"
+        AlertDialog(
+            onDismissRequest = { placeholder="你逃不掉喵~"/* 不可点击边缘取消 */ },
+            title = { Text("输入落雪 Token 喵~") },
+            text = {
+                Column {
+                    Spacer(Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = tokenInput,
+                        onValueChange = { tokenInput = it },
+                        placeholder = { Text(placeholder) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (tokenInput.isNotEmpty()) {
+                            maiupViewModel.updateLxnsAPI(tokenInput)
+                            playerDataViewModel.reload(tokenInput)
+                            showTokenDialog = false
+                        }
+                    },
+                    enabled = tokenInput.isNotEmpty()
+                ) {
+                    Text("确认")
+                }
+            },
+            dismissButton = null // 禁用取消按钮
+        )
+    }
+
+    // 同步对话框
+    AnimatedDialog(
+        visible = showDialog
+    ) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("同步成绩") },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "来源",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    // 第一排：舞萌DX, 中二节奏
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = syncMai,
+                            onClick = { syncMai = !syncMai },
+                            label = { Text("舞萌DX") },
+                            leadingIcon = if (syncMai) {
+                                { Icon(Icons.Default.Check, contentDescription = null) }
+                            } else null,
+                            modifier = Modifier.weight(1f),
+                        )
+                        FilterChip(
+                            selected = syncChu,
+                            onClick = { syncChu = !syncChu },
+                            label = { Text("中二节奏") },
+                            leadingIcon = if (syncChu) {
+                                { Icon(Icons.Default.Check, contentDescription = null) }
+                            } else null,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    Text(
+                        "查分器",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    // 第二排：落雪, 水鱼
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = syncLxns,
+                            onClick = { syncLxns = !syncLxns },
+                            label = { Text("落雪") },
+                            leadingIcon = if (syncLxns) {
+                                { Icon(Icons.Default.Check, contentDescription = null) }
+                            } else null,
+                            modifier = Modifier.weight(1f),
+                        )
+                        FilterChip(
+                            selected = syncWaterfish,
+                            onClick = { syncWaterfish = !syncWaterfish },
+                            label = { Text("水鱼") },
+                            leadingIcon = if (syncWaterfish) {
+                                { Icon(Icons.Default.Check, contentDescription = null) }
+                            } else null,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // TODO: 实现同步功能
+                        showDialog = false
+                    }
+                ) {
+                    Text("同步")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDialog = false }
+                ) {
+                    Text("取消")
+                }
+            }
+        )
+    }
 
     NavigationSuiteScaffold(
         modifier = Modifier,
@@ -86,95 +275,6 @@ fun NavBar(){
                         Icon(
                             imageVector = Icons.Default.Sync,
                             contentDescription = "同步"
-                        )
-                    }
-                    // 同步对话框
-                    if (showDialog) {
-                        AlertDialog(
-                            onDismissRequest = { showDialog = false },
-                            title = { Text("同步成绩") },
-                            text = {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Text(
-                                        "来源",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    // 第一排：舞萌DX, 中二节奏
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        FilterChip(
-                                            selected = syncMai,
-                                            onClick = { syncMai = !syncMai },
-                                            label = { Text("舞萌DX") },
-                                            leadingIcon = if (syncMai) {
-                                                { Icon(Icons.Default.Check, contentDescription = null) }
-                                            } else null,
-                                            modifier = Modifier.weight(1f),
-                                        )
-                                        FilterChip(
-                                            selected = syncChu,
-                                            onClick = { syncChu = !syncChu },
-                                            label = { Text("中二节奏") },
-                                            leadingIcon = if (syncChu) {
-                                                { Icon(Icons.Default.Check, contentDescription = null) }
-                                            } else null,
-                                            modifier = Modifier.weight(1f),
-                                        )
-                                    }
-                                    Text(
-                                        "查分器",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    // 第二排：落雪, 水鱼
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        FilterChip(
-                                            selected = syncLxns,
-                                            onClick = { syncLxns = !syncLxns },
-                                            label = { Text("落雪") },
-                                            leadingIcon = if (syncLxns) {
-                                                { Icon(Icons.Default.Check, contentDescription = null) }
-                                            } else null,
-                                            modifier = Modifier.weight(1f),
-                                        )
-                                        FilterChip(
-                                            selected = syncWaterfish,
-                                            onClick = { syncWaterfish = !syncWaterfish },
-                                            label = { Text("水鱼") },
-                                            leadingIcon = if (syncWaterfish) {
-                                                { Icon(Icons.Default.Check, contentDescription = null) }
-                                            } else null,
-                                            modifier = Modifier.weight(1f),
-                                        )
-                                    }
-                                }
-                            },
-                            confirmButton = {
-                                TextButton(
-                                    onClick = {
-                                        // TODO: 实现同步功能
-                                        showDialog = false
-                                    }
-                                ) {
-                                    Text("同步")
-                                }
-                            },
-                            dismissButton = {
-                                TextButton(
-                                    onClick = { showDialog = false }
-                                ) {
-                                    Text("取消")
-                                }
-                            }
                         )
                     }
 

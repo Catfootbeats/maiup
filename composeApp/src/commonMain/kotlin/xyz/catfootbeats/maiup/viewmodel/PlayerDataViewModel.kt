@@ -2,6 +2,8 @@ package xyz.catfootbeats.maiup.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,20 +26,20 @@ class PlayerDataViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private var retryJob: Job? = null
+
     init {
         viewModelScope.launch {
             maiupViewModel.settingsState.collect { settings ->
                 val token = settings.lxnsToken
-                // 只在 token 不为空时执行
-                if (token.isNotEmpty()) {
-                    loadRatingTrend(token)
-                    loadPlayerLxns(token)
-                }
+                reload(token)
             }
         }
     }
 
     fun reload(token: String){
+        // 取消之前的重试任务
+        retryJob?.cancel()
         viewModelScope.launch {
             // 只在 token 不为空时执行
             if (token.isNotEmpty()) {
@@ -59,12 +61,32 @@ class PlayerDataViewModel(
                 if (response.success && response.code == 200) {
                     _lxnsRatingTrend.value = response.data
                 } else if (response.code == 401){
-                    _error.value = "落雪查分器Token错误"
+                    _error.value = "落雪查分器 Token 错误喵"
                 } else {
-                    _error.value = "获取玩家信息失败: ${response.code}"
+                    _error.value = "获取玩家信息失败: ${response.code}喵"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "获取玩家信息失败"
+                if(e.message?.contains("No address associated with hostname") == true){
+                    _error.value = "你没联网喵~"
+                }else {
+                    _error.value = e.message ?: "获取玩家信息失败喵"
+                }
+                // 失败后每隔5秒重试
+                retryJob = viewModelScope.launch {
+                    while (true) {
+                        delay(5000)
+                        try {
+                            val response = lxnsApi.getPlayerTrend(userToken)
+                            if (response.success && response.code == 200) {
+                                _lxnsRatingTrend.value = response.data
+                                _error.value = null
+                                break
+                            }
+                        } catch (e: Exception) {
+                            // 继续重试
+                        }
+                    }
+                }
             }
         }
     }
@@ -85,7 +107,28 @@ class PlayerDataViewModel(
                     _error.value = "获取玩家信息失败: ${response.code}"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "获取玩家信息失败"
+                if(e.message?.contains("No address associated with hostname") == true){
+                    _error.value = "你没联网喵~"
+                } else {
+                    _error.value = e.message ?: "获取玩家信息失败"
+                }
+                // 失败后每隔5秒重试
+                retryJob = viewModelScope.launch {
+                    while (true) {
+                        delay(5000)
+                        try {
+                            val response = lxnsApi.getPlayerInfo(userToken)
+                            if (response.success && response.code == 200) {
+                                _lxnsPlayerMaiInfo.value = response.data!!
+                                _error.value = null
+                                _isLoad.value = true
+                                break
+                            }
+                        } catch (e: Exception) {
+                            // 继续重试
+                        }
+                    }
+                }
             } finally {
                 _isLoad.value = true
             }

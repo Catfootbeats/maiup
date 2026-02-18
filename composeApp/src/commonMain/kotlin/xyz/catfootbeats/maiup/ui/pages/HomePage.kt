@@ -47,58 +47,6 @@ fun HomePage() {
     val ratingTrend by playerDataViewModel.lxnsRatingTrend.collectAsState()
     val dataError by playerDataViewModel.error.collectAsState()
 
-    // 检测lxnsToken是否为空
-    var showTokenDialog by remember { mutableStateOf(false) }
-    var tokenInput by remember { mutableStateOf("") }
-    var settingsLoaded by remember { mutableStateOf(false) }
-
-    // 等待设置加载完成并延迟一秒
-    LaunchedEffect(settings) {
-        if (!settingsLoaded) {
-            settingsLoaded = true
-            // 延迟一秒后再检测
-            kotlinx.coroutines.delay(1000)
-            showTokenDialog = settings.lxnsToken.isEmpty()
-            tokenInput = settings.lxnsToken
-        }
-    }
-
-    // Token输入对话框
-    if (showTokenDialog) {
-        AlertDialog(
-            onDismissRequest = { /* 不可点击边缘取消 */ },
-            title = { Text("输入落雪查分器Token") },
-            text = {
-                Column {
-                    Spacer(Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = tokenInput,
-                        onValueChange = { tokenInput = it },
-                        placeholder = { Text("请输入您的落雪查分器Token") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (tokenInput.isNotEmpty()) {
-                            maiupViewModel.updateLxnsAPI(tokenInput)
-                            playerDataViewModel.reload(tokenInput)
-                            showTokenDialog = false
-                        }
-                    },
-                    enabled = tokenInput.isNotEmpty()
-                ) {
-                    Text("确认")
-                }
-            },
-            dismissButton = null // 禁用取消按钮
-        )
-    }
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
