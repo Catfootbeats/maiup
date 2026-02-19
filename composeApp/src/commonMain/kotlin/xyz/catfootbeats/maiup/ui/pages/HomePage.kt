@@ -5,6 +5,7 @@ import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.*
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import xyz.catfootbeats.maiup.model.RatingTrend
@@ -40,8 +42,6 @@ import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 @Composable
 fun HomePage() {
     val playerDataViewModel: PlayerDataViewModel = koinViewModel()
-    val maiupViewModel: MaiupViewModel = koinViewModel()
-    val settings by maiupViewModel.settingsState.collectAsState()
     val isLoad by playerDataViewModel.isLoad.collectAsState()
     val playerInfo by playerDataViewModel.lxnsPlayerMaiInfo.collectAsState()
     val ratingTrend by playerDataViewModel.lxnsRatingTrend.collectAsState()
@@ -285,27 +285,27 @@ fun OthersCard() {
                 val iconItems = remember {
                     listOf(
                         IconItemData(
-                            icon = Icons.Default.Map,
+                            icon = IconSource.Url("https://map.bemanicn.com/favicon.png"),
                             text = "音游地图",
                             webUrl = "https://map.bemanicn.com/"
                         ),
                         IconItemData(
-                            icon = Icons.Default.Api,
+                            icon = IconSource.Url("https://maimai.lxns.net/favicon.webp"),
                             text = "落雪查分器",
                             webUrl = "https://maimai.lxns.net/"
                         ),
                         IconItemData(
-                            icon = Icons.Default.Api,
+                            icon = IconSource.Url("https://www.diving-fish.com/favicon.ico"),
                             text = "水鱼查分器",
                             webUrl = "https://www.diving-fish.com/maimaidx/prober/"
                         ),
                         IconItemData(
-                            icon = Icons.Default.Api,
+                            icon = IconSource.Url("https://shama.dxrating.net/images/version-logo/circle.webp"),
                             text = "DXRating",
                             webUrl = "https://dxrating.net/"
                         ),
                         IconItemData(
-                            icon = Icons.Default.Api,
+                            icon = IconSource.Url("https://union.godserver.cn/assets/png/icon-BDHGr2IZ.png"),
                             text = "Union",
                             webUrl = "https://union.godserver.cn/"
                         ),
@@ -325,8 +325,14 @@ fun OthersCard() {
     }
 }
 
+sealed class IconSource {
+    data class Vector(val imageVector: ImageVector) : IconSource()
+    data class Url(val url: String) : IconSource()
+    data class Resource(val resourcePath: DrawableResource) : IconSource()
+}
+
 data class IconItemData(
-    val icon: ImageVector,
+    val icon: IconSource,
     val text: String,
     val webUrl: String,
     val openExternal: Boolean = true
@@ -334,7 +340,7 @@ data class IconItemData(
 
 @Composable
 fun IconGridItem(
-    icon: ImageVector,
+    icon: IconSource,
     text: String,
     webUrl: String,
     openExternal: Boolean = true
@@ -355,12 +361,29 @@ fun IconGridItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = text,
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            when (icon) {
+                is IconSource.Vector -> {
+                    Icon(
+                        imageVector = icon.imageVector,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+                is IconSource.Url -> {
+                    AsyncImage(
+                        model = icon.url,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+                is IconSource.Resource -> {
+                    Image(
+                        painter = painterResource(icon.resourcePath),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = text,

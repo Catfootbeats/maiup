@@ -1,17 +1,17 @@
 # MaiUp!!!
 
-一个用 `Kotlin Multiplatform` 构建的 `舞萌 | 中二` 传分器，支持 `落雪 | 水鱼` 查分器。
+一个使用 `Kotlin Multiplatform` 构建的 `舞萌 | 中二` 传分器，支持 `落雪 | 水鱼` 查分器。
 
-## 功能
+## 功能 RoadMap
 
-- [x] 更换主题 
-- [ ] 支持 CHUNITHM
+- [x] 更换主题
 - [ ] 上传成绩
 - [ ] 查询歌曲
 - [ ] 查询 B50
-- [ ] 适配 ios
+- [ ] 支持 CHUNITHM
 - [ ] 支持落雪 OAuth
 - [ ] 其他功能 ...
+- [ ] 适配 ios (有了Mac再说)
 
 ## Bug 修复
 

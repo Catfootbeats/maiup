@@ -67,13 +67,13 @@ fun AnimatedDialog(
         ),
         exit = scaleOut(
             animationSpec = tween(
-                durationMillis = 300,
+                durationMillis = 100,
                 easing = FastOutSlowInEasing
             ),
             targetScale = 0.8f
         ) + fadeOut(
             animationSpec = tween(
-                durationMillis = 300,
+                durationMillis = 100,
                 easing = FastOutSlowInEasing
             )
         ),
@@ -92,10 +92,45 @@ fun NavBar(){
     var expanded by rememberSaveable { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
     val settings by maiupViewModel.settingsState.collectAsState()
-    var syncMai by remember { mutableStateOf(true) }
-    var syncChu by remember { mutableStateOf(true) }
-    var syncLxns by remember { mutableStateOf(true) }
-    var syncWaterfish by remember { mutableStateOf(true) }
+    var upMai by remember { mutableStateOf(true) }
+    var upChu by remember { mutableStateOf(false) }
+    var upLxns by remember { mutableStateOf(settings.lxnsToken.isNotEmpty()) }
+    var upWaterfish by remember { mutableStateOf(settings.waterfishToken.isNotEmpty()) }
+
+    @Composable
+    fun SyncFilterChip(
+        selected: Boolean,
+        onSelectedChange: () -> Unit,
+        label: String,
+        enable: Boolean,
+        modifier: Modifier = Modifier
+    ) {
+        FilterChip(
+            selected = selected,
+            onClick = { 
+                if (enable) {
+                    onSelectedChange()
+                }
+            },
+            label = { Text(
+                label,
+                color = if (!enable)
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                else 
+                    MaterialTheme.colorScheme.onSurface
+            )},
+            leadingIcon = if (selected) {
+                { Icon(Icons.Default.Check, contentDescription = null) }
+            } else null,
+            modifier = modifier,
+            enabled = enable,
+            colors = FilterChipDefaults.filterChipColors(
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+        )
+    }
 
     // 检测lxnsToken是否为空
     var showTokenDialog by remember { mutableStateOf(false) }
@@ -107,6 +142,9 @@ fun NavBar(){
             delay(1000)
             showTokenDialog = settings.lxnsToken.isEmpty()
             tokenInput = settings.lxnsToken
+            // 根据token状态更新同步选项
+            upLxns = settings.lxnsToken.isNotEmpty()
+            upWaterfish = settings.waterfishToken.isNotEmpty()
     }
     // Token输入对话框
     AnimatedDialog(
@@ -169,23 +207,19 @@ fun NavBar(){
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        FilterChip(
-                            selected = syncMai,
-                            onClick = { syncMai = !syncMai },
-                            label = { Text("舞萌DX") },
-                            leadingIcon = if (syncMai) {
-                                { Icon(Icons.Default.Check, contentDescription = null) }
-                            } else null,
-                            modifier = Modifier.weight(1f),
+                        SyncFilterChip(
+                            selected = upMai,
+                            onSelectedChange = { upMai = !upMai },
+                            label = "舞萌DX",
+                            enable = true,
+                            modifier = Modifier.weight(1f)
                         )
-                        FilterChip(
-                            selected = syncChu,
-                            onClick = { syncChu = !syncChu },
-                            label = { Text("中二节奏") },
-                            leadingIcon = if (syncChu) {
-                                { Icon(Icons.Default.Check, contentDescription = null) }
-                            } else null,
-                            modifier = Modifier.weight(1f),
+                        SyncFilterChip(
+                            selected = upChu,
+                            onSelectedChange = { upChu = !upChu },
+                            label = "中二节奏",
+                            enable = false,
+                            modifier = Modifier.weight(1f)
                         )
                     }
                     Text(
@@ -198,23 +232,19 @@ fun NavBar(){
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        FilterChip(
-                            selected = syncLxns,
-                            onClick = { syncLxns = !syncLxns },
-                            label = { Text("落雪") },
-                            leadingIcon = if (syncLxns) {
-                                { Icon(Icons.Default.Check, contentDescription = null) }
-                            } else null,
-                            modifier = Modifier.weight(1f),
+                        SyncFilterChip(
+                            selected = upLxns,
+                            onSelectedChange = { upLxns = !upLxns },
+                            label = "落雪",
+                            enable = settings.lxnsToken.isNotEmpty(),
+                            modifier = Modifier.weight(1f)
                         )
-                        FilterChip(
-                            selected = syncWaterfish,
-                            onClick = { syncWaterfish = !syncWaterfish },
-                            label = { Text("水鱼") },
-                            leadingIcon = if (syncWaterfish) {
-                                { Icon(Icons.Default.Check, contentDescription = null) }
-                            } else null,
-                            modifier = Modifier.weight(1f),
+                        SyncFilterChip(
+                            selected = upWaterfish,
+                            onSelectedChange = { upWaterfish = !upWaterfish },
+                            label = "水鱼",
+                            enable = settings.waterfishToken.isNotEmpty(),
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -273,8 +303,8 @@ fun NavBar(){
                     // 同步按钮
                     IconButton(onClick = { showDialog = true }) {
                         Icon(
-                            imageVector = Icons.Default.Sync,
-                            contentDescription = "同步"
+                            imageVector = Icons.Default.Update,
+                            contentDescription = "更新"
                         )
                     }
 

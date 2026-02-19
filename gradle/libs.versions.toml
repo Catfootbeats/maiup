@@ -15,7 +15,17 @@ junit = "4.13.2"
 kotlin = "2.3.0"
 kotlinx-coroutines = "1.10.2"
 material3 = "1.10.0-alpha05"
+material3-adaptive-navigation-suite = "1.9.0"
 androidx-viewmodel = "2.10.0"
+ktor = "2.3.7"
+slf4j = "2.0.9"
+kotlinx-serialization-json = "1.6.2"
+coil-compose = "3.3.0"
+compose-charts = "0.2.0"
+koin = "4.1.0"
+datastore = "1.2.0"
+material = "1.10.0"
+material-icons-extended = "1.7.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -37,6 +47,36 @@ compose-components-resources = { module = "org.jetbrains.compose.components:comp
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-viewmodel" }
+# material3 adaptive navigation suite
+material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3-adaptive-navigation-suite"}
+# material icons
+material = { module = "org.jetbrains.compose.material:material", version.ref = "material"}
+material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "material-icons-extended"}
+# koin
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin"}
+koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin"}
+koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin"}
+# datastore
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore"}
+# ktor okhttp for android
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor"}
+# ktor for darwin
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor"}
+# ktor for jvm
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor"}
+# slf4j for ktor jvm
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j"}
+# ktor for common
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor"}
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor"}
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor"}
+# kotlin 序列化
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json"}
+# 在线图片
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil-compose"}
+coil-network-ktor2 = { module = "io.coil-kt.coil3:coil-network-ktor2", version.ref = "coil-compose"}
+# 图表
+compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "compose-charts"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

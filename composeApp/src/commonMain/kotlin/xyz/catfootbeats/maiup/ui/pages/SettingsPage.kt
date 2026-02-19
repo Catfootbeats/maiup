@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Job
 import org.koin.compose.viewmodel.koinViewModel
 import xyz.catfootbeats.maiup.AppConfig
 import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
@@ -32,14 +33,14 @@ import xyz.catfootbeats.maiup.utils.openUrl
 
 @Composable
 fun SettingsPage(){
-    val vm: MaiupViewModel = koinViewModel()
-    val settings by vm.settingsState.collectAsState()
+    val maiupViewModel: MaiupViewModel = koinViewModel()
+    val settings by maiupViewModel.settingsState.collectAsState()
     val focusManager = LocalFocusManager.current
     val playerDataViewModel: PlayerDataViewModel = koinViewModel()
     
     // 防抖处理
     val coroutineScope = rememberCoroutineScope()
-    var debounceJob by rememberSaveable { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var debounceJob by rememberSaveable { mutableStateOf<Job?>(null) }
     
     LazyColumn(
         modifier = Modifier
@@ -59,7 +60,7 @@ fun SettingsPage(){
                     PasswordTextField(
                         value = settings.lxnsToken,
                         onValueChange = { 
-                            vm.updateLxnsAPI(it)
+                            maiupViewModel.updateLxnsAPI(it)
                             // 防抖:取消之前的任务,启动新的任务
                             debounceJob?.cancel()
                             debounceJob = coroutineScope.launch {
@@ -76,7 +77,7 @@ fun SettingsPage(){
                 SettingItemColumn("水鱼成绩导入 Token"){
                     PasswordTextField(
                         value = settings.waterfishToken,
-                        onValueChange = { vm.updateWaterfishToken(it) },
+                        onValueChange = { maiupViewModel.updateWaterfishToken(it) },
                         placeholder = "请输入Token"
                     )
                 }
@@ -85,7 +86,7 @@ fun SettingsPage(){
         item {
             SettingsCard("外观"){
                 SettingItemRow("主题"){
-                    ThemeToggler(vm)
+                    ThemeToggler(maiupViewModel)
                 }
             }
         }

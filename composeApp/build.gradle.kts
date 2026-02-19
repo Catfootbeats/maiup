@@ -39,7 +39,7 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
             // Ktor Android 引擎
-            implementation("io.ktor:ktor-client-okhttp:2.3.7")
+            implementation(libs.ktor.client.okhttp)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -51,24 +51,28 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             api(libs.androidx.lifecycle.viewmodel)
-            implementation("org.jetbrains.compose.material3:material3-adaptive-navigation-suite:1.9.0")
-            implementation("org.jetbrains.compose.material:material:1.10.0")          // 基础 Material 组件 + 核心图标
-            implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
-            implementation("io.insert-koin:koin-core:4.1.0")
-            implementation("io.insert-koin:koin-compose:4.1.0")
-            implementation("io.insert-koin:koin-compose-viewmodel:4.1.0")
-            implementation("androidx.datastore:datastore-preferences:1.2.0")
+            // material3 adaptive navigation suite
+            implementation(libs.material3.adaptive.navigation.suite)
+            // material icons
+            implementation(libs.material)
+            implementation(libs.material.icons.extended)
+            // koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            // datastore
+            implementation(libs.datastore.preferences)
             // Ktor 客户端
-            implementation("io.ktor:ktor-client-core:2.3.7")
-            implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
-            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
             // Kotlinx 序列化
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+            implementation(libs.kotlinx.serialization.json)
             // 在线图片
-            implementation("io.coil-kt.coil3:coil-compose:3.3.0")
-            implementation("io.coil-kt.coil3:coil-network-ktor2:3.3.0")
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor2)
             // 图表
-            implementation ("io.github.ehsannarmani:compose-charts:0.2.0")
+            implementation(libs.compose.charts)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -77,12 +81,12 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
             // Ktor JVM 引擎
-            implementation("io.ktor:ktor-client-cio:2.3.7")
-            implementation("org.slf4j:slf4j-simple:2.0.9")
+            implementation(libs.ktor.client.cio)
+            implementation(libs.slf4j.simple)
         }
         iosMain.dependencies {
             // Ktor iOS 引擎
-            implementation("io.ktor:ktor-client-darwin:2.3.7")
+            implementation(libs.ktor.client.darwin)
         }
     }
 }

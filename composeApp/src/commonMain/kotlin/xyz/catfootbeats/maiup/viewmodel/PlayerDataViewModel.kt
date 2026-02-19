@@ -49,40 +49,42 @@ class PlayerDataViewModel(
             }
         }
     }
+
     /**
-     * 获取Rating趋势
-     * @param userToken 用户 Token，用于 API 认证
+     * 通用API请求处理函数
+     * @param userToken 用户 Token
+     * @param apiCall API调用函数
+     * @param onSuccess 成功回调
+     * @param onError 错误回调
+     * @param onRetry 重试回调
      */
-    private fun loadRatingTrend(userToken: String){
+    private fun <T> handleApiCall(
+        userToken: String,
+        apiCall: suspend (String) -> T,
+        onSuccess: (T) -> Unit,
+        onRetry: suspend (String) -> T
+    ) {
         _error.value = null
         viewModelScope.launch {
             try {
-                val response = lxnsApi.getPlayerTrend(userToken)
-                if (response.success && response.code == 200) {
-                    _lxnsRatingTrend.value = response.data
-                } else if (response.code == 401){
-                    _error.value = "落雪查分器 Token 错误喵"
-                } else {
-                    _error.value = "获取玩家信息失败: ${response.code}喵"
-                }
+                val response = apiCall(userToken)
+                onSuccess(response)
             } catch (e: Exception) {
-                if(e.message?.contains("No address associated with hostname") == true){
+                if (e.message?.contains("No address associated with hostname") == true) {
                     _error.value = "你没联网喵~"
-                }else {
-                    _error.value = e.message ?: "获取玩家信息失败喵"
+                } else {
+                    _error.value = e.message ?: "请求失败喵"
                 }
                 // 失败后每隔5秒重试
                 retryJob = viewModelScope.launch {
                     while (true) {
                         delay(5000)
                         try {
-                            val response = lxnsApi.getPlayerTrend(userToken)
-                            if (response.success && response.code == 200) {
-                                _lxnsRatingTrend.value = response.data
-                                _error.value = null
-                                break
-                            }
-                        } catch (e: Exception) {
+                            val response = onRetry(userToken)
+                            onSuccess(response)
+                            _error.value = null
+                            break
+                        } catch (_: Exception) {
                             // 继续重试
                         }
                     }
@@ -90,49 +92,56 @@ class PlayerDataViewModel(
             }
         }
     }
+
+    /**
+     * 获取Rating趋势
+     * @param userToken 用户 Token，用于 API 认证
+     */
+    private fun loadRatingTrend(userToken: String) {
+        handleApiCall(
+            userToken = userToken,
+            apiCall = { lxnsApi.getPlayerTrend(it) },
+            onSuccess = { response ->
+                when {
+                    response.success && response.code == 200 -> {
+                        _lxnsRatingTrend.value = response.data
+                    }
+                    response.code == 401 -> {
+                        _error.value = "落雪查分器 Token 错误喵"
+                    }
+                    else -> {
+                        _error.value = "获取玩家信息失败: ${response.code}喵"
+                    }
+                }
+            },
+            onRetry = { lxnsApi.getPlayerTrend(it) }
+        )
+    }
+
     /**
      * 获取玩家信息
      * @param userToken 用户 Token，用于 API 认证
      */
     private fun loadPlayerLxns(userToken: String) {
-        viewModelScope.launch {
-            _error.value = null
-            try {
-                val response = lxnsApi.getPlayerInfo(userToken)
-                if (response.success && response.code == 200) {
-                    _lxnsPlayerMaiInfo.value = response.data!!
-                } else if (response.code == 401){
-                    _error.value = "落雪查分器Token错误"
-                } else {
-                    _error.value = "获取玩家信息失败: ${response.code}"
-                }
-            } catch (e: Exception) {
-                if(e.message?.contains("No address associated with hostname") == true){
-                    _error.value = "你没联网喵~"
-                } else {
-                    _error.value = e.message ?: "获取玩家信息失败"
-                }
-                // 失败后每隔5秒重试
-                retryJob = viewModelScope.launch {
-                    while (true) {
-                        delay(5000)
-                        try {
-                            val response = lxnsApi.getPlayerInfo(userToken)
-                            if (response.success && response.code == 200) {
-                                _lxnsPlayerMaiInfo.value = response.data!!
-                                _error.value = null
-                                _isLoad.value = true
-                                break
-                            }
-                        } catch (e: Exception) {
-                            // 继续重试
-                        }
+        handleApiCall(
+            userToken = userToken,
+            apiCall = { lxnsApi.getPlayerInfo(it) },
+            onSuccess = { response ->
+                when {
+                    response.success && response.code == 200 -> {
+                        _lxnsPlayerMaiInfo.value = response.data!!
+                    }
+                    response.code == 401 -> {
+                        _error.value = "落雪查分器Token错误"
+                    }
+                    else -> {
+                        _error.value = "获取玩家信息失败: ${response.code}"
                     }
                 }
-            } finally {
                 _isLoad.value = true
-            }
-        }
+            },
+            onRetry = { lxnsApi.getPlayerInfo(it) }
+        )
     }
 
     /**
