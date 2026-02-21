@@ -47,7 +47,7 @@ class LxnsApi(
     }
 
     /**
-     * 上传玩家信息
+     * 上传玩家成绩
      * @param lxnsPlayerMai 玩家信息
      * @return 上传结果
      */

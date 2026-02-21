@@ -109,7 +109,7 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = false         // 应用优化
         }
     }
     compileOptions {
@@ -127,7 +127,7 @@ compose.desktop {
         mainClass = "xyz.catfootbeats.maiup.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Rpm)
             packageName = "xyz.catfootbeats.maiup"
             packageVersion = appVersionName
         }
