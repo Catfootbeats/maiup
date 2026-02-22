@@ -1,7 +1,5 @@
 package xyz.catfootbeats.maiup.ui.pages
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +21,7 @@ import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.resources.Res
 import xyz.catfootbeats.maiup.resources.chu
 import xyz.catfootbeats.maiup.resources.mai
+import xyz.catfootbeats.maiup.ui.animation.AnimatedDialog
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 
@@ -39,48 +38,6 @@ enum class AppDestinations(
     RANK("成绩", Icons.Default.DataExploration,"成绩"),
     // 设置 用于设置查分器 同步成绩设定
     SETTINGS("设置", Icons.Default.Settings,"设置"),
-}
-
-/**
- * 为对话框添加缩放和淡入淡出动画效果
- * @param visible 对话框是否可见
- * @param content 对话框内容
- */
-@Composable
-fun AnimatedDialog(
-    visible: Boolean,
-    content: @Composable () -> Unit
-) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = scaleIn(
-            animationSpec = tween(
-                durationMillis = 300,
-                easing = FastOutSlowInEasing
-            ),
-            initialScale = 0.8f
-        ) + fadeIn(
-            animationSpec = tween(
-                durationMillis = 300,
-                easing = FastOutSlowInEasing
-            )
-        ),
-        exit = scaleOut(
-            animationSpec = tween(
-                durationMillis = 100,
-                easing = FastOutSlowInEasing
-            ),
-            targetScale = 0.8f
-        ) + fadeOut(
-            animationSpec = tween(
-                durationMillis = 100,
-                easing = FastOutSlowInEasing
-            )
-        ),
-        label = "AnimatedDialog"
-    ) {
-        content()
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

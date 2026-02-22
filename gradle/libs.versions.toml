@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.2"
+agp = "8.12.0"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
@@ -80,6 +80,10 @@ coil-network-ktor2 = { module = "io.coil-kt.coil3:coil-network-ktor2", version.r
 compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "compose-charts"}
 
 [plugins]
+# for android
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }

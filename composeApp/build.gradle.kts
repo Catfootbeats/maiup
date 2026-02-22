@@ -10,9 +10,9 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.composeHotReload)
+    // alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinx.serialization)
-    id("com.codingfeline.buildkonfig")
+    alias(libs.plugins.buildkonfig)
 }
 
 kotlin {
@@ -144,8 +144,6 @@ buildkonfig {
     packageName = "xyz.catfootbeats.maiup"
     objectName = "AppConfig"
     defaultConfigs {
-
-
         // 定义字段：类型、字段名、值
         buildConfigField(STRING, "VERSION_NAME", appVersionName) // 注意字符串需要转义引号
     }

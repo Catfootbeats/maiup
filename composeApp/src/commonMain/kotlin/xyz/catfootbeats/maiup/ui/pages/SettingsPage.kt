@@ -28,6 +28,11 @@ import org.koin.compose.viewmodel.koinViewModel
 import xyz.catfootbeats.maiup.AppConfig
 import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 import xyz.catfootbeats.maiup.model.ThemeMode
+import xyz.catfootbeats.maiup.ui.components.PasswordTextField
+import xyz.catfootbeats.maiup.ui.components.SettingItemColumn
+import xyz.catfootbeats.maiup.ui.components.SettingItemRow
+import xyz.catfootbeats.maiup.ui.components.SettingsCard
+import xyz.catfootbeats.maiup.ui.components.ThemeToggler
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.utils.openUrl
 
@@ -86,7 +91,7 @@ fun SettingsPage(){
         item {
             SettingsCard("外观"){
                 SettingItemRow("主题"){
-                    ThemeToggler(maiupViewModel)
+                    ThemeToggler()
                 }
             }
         }
@@ -109,173 +114,4 @@ fun SettingsPage(){
             }
         }
     }
-}
-
-@Composable
-fun SettingsCard(
-    title: String,
-    tips: String = "",
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .width(500.dp),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onSecondary,
-            //contentColor = MaterialTheme.colorScheme.secondary
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize(),
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            Column(
-                content=content,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            )
-            if(tips!=""){
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = tips,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SettingItemRow(text: String, content: (@Composable RowScope.() -> Unit)){
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ){
-        Text(text = text,style = MaterialTheme.typography.bodyMedium)
-        content()
-    }
-}
-
-@Composable
-fun SettingItemColumn(text: String, content: (@Composable ColumnScope.() -> Unit)){
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.SpaceBetween,
-    ){
-        Text(
-            modifier = Modifier.padding(bottom = 4.dp),
-            text = text,
-            style = MaterialTheme.typography.bodyMedium)
-        content()
-    }
-}
-@Composable
-fun ThemeToggler(vm: MaiupViewModel) {
-    var expanded by remember { mutableStateOf(false) }
-    val settings by vm.settingsState.collectAsState()
-
-    Box {
-        TextButton(
-            onClick = { expanded = true },
-        ) {
-                Text(
-                    text = when (settings.themeMode) {
-                        ThemeMode.LIGHT -> "浅色模式"
-                        ThemeMode.DARK -> "深色模式"
-                        ThemeMode.SYSTEM -> "跟随系统"
-                    }
-                )
-            /*
-                Icon(
-                    imageVector = Icons.Filled.ArrowDropDown,
-                    contentDescription = "展开菜单",
-                )*/
-        }
-        
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            DropdownMenuItem(
-                text = { Text("跟随系统") },
-                onClick = {
-                    vm.updateTheme(ThemeMode.SYSTEM)
-                    expanded = false
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.BrightnessAuto,
-                        contentDescription = "跟随系统"
-                    )
-                }
-            )
-            DropdownMenuItem(
-                text = { Text("浅色模式") },
-                onClick = {
-                    vm.updateTheme(ThemeMode.LIGHT)
-                    expanded = false
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.LightMode,
-                        contentDescription = "浅色模式"
-                    )
-                }
-            )
-            DropdownMenuItem(
-                text = { Text("深色模式") },
-                onClick = {
-                    vm.updateTheme(ThemeMode.DARK)
-                    expanded = false
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.DarkMode,
-                        contentDescription = "深色模式"
-                    )
-                }
-            )
-        }
-    }
-}
-
-@Composable
-fun PasswordTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String
-) {
-    var passwordVisible by remember { mutableStateOf(false) }
-
-    OutlinedTextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder) },
-        singleLine = true,
-        shape = RoundedCornerShape(8.dp),
-        visualTransformation = if (passwordVisible) {
-            VisualTransformation.None
-        } else {
-            PasswordVisualTransformation()
-        },
-        trailingIcon = {
-            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                Icon(
-                    imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                    contentDescription = if (passwordVisible) "隐藏密码" else "显示密码"
-                )
-            }
-        }
-    )
 }

@@ -8,6 +8,7 @@ import xyz.catfootbeats.maiup.model.ApiResponse
 import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.model.LxnsPlayerMai
 import xyz.catfootbeats.maiup.model.RatingTrend
+import xyz.catfootbeats.maiup.model.Score
 import xyz.catfootbeats.maiup.model.getName
 
 /**
@@ -38,7 +39,11 @@ class LxnsApi(
      * @param version 游戏版本号，默认为 25000
      * @return API 响应，包含 Rating 趋势数据列表
      */
-    suspend fun getPlayerTrend(userToken: String, game: Game = Game.MAI, version: Int = 25000): ApiResponse<List<RatingTrend>> {
+    suspend fun getPlayerTrend(
+        userToken: String,
+        game: Game = Game.MAI,
+        version: Int = 25000
+    ): ApiResponse<List<RatingTrend>> {
         return client.get("$baseUrl/user/${game.getName()}/player/trend") {
             header("X-User-Token", userToken)
             parameter("version", version)
@@ -48,18 +53,15 @@ class LxnsApi(
 
     /**
      * 上传玩家成绩
-     * @param lxnsPlayerMai 玩家信息
-     * @return 上传结果
+     * @param userToken 用户 Token，用于 API 认证
+     * @param scores 玩家成绩列表
+     * @return API 响应，包含上传结果
      */
-    suspend fun uploadPlayerInfoMai(lxnsPlayerMai: LxnsPlayerMai): Boolean {
-        return try {
-            // TODO: 实现上传
-            client.post("$baseUrl/maimai/player") {
-                contentType(ContentType.Application.Json)
-                setBody(lxnsPlayerMai)
-            }.status == HttpStatusCode.OK
-        } catch (_: Exception) {
-            false
-        }
+    suspend fun uploadPlayerScores(userToken: String, scores: List<Score>, game: Game = Game.MAI): ApiResponse<Unit> {
+        return client.post("$baseUrl/user/${game.getName()}/player/scores") {
+            header("X-User-Token", userToken)
+            contentType(ContentType.Application.Json)
+            setBody(mapOf("scores" to scores))
+        }.body()
     }
 }
