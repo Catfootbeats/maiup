@@ -1,117 +1,184 @@
 package xyz.catfootbeats.maiup.ui.pages
 
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrightnessAuto
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Job
 import org.koin.compose.viewmodel.koinViewModel
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.extra.SuperArrow
+import top.yukonga.miuix.kmp.extra.SuperSwitch
+import top.yukonga.miuix.kmp.extra.WindowDialog
+import top.yukonga.miuix.kmp.extra.WindowDropdown
+import top.yukonga.miuix.kmp.basic.ColorPalette
 import xyz.catfootbeats.maiup.AppConfig
-import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 import xyz.catfootbeats.maiup.model.ThemeMode
-import xyz.catfootbeats.maiup.ui.components.PasswordTextField
-import xyz.catfootbeats.maiup.ui.components.SettingItemColumn
-import xyz.catfootbeats.maiup.ui.components.SettingItemRow
-import xyz.catfootbeats.maiup.ui.components.SettingsCard
-import xyz.catfootbeats.maiup.ui.components.ThemeToggler
-import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
+import xyz.catfootbeats.maiup.model.getName
+import xyz.catfootbeats.maiup.ui.components.*
 import xyz.catfootbeats.maiup.utils.openUrl
+import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
+import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 
 @Composable
-fun SettingsPage(){
+fun SettingsPage() {
     val maiupViewModel: MaiupViewModel = koinViewModel()
     val settings by maiupViewModel.settingsState.collectAsState()
-    val focusManager = LocalFocusManager.current
     val playerDataViewModel: PlayerDataViewModel = koinViewModel()
-    
-    // 防抖处理
-    val coroutineScope = rememberCoroutineScope()
-    var debounceJob by rememberSaveable { mutableStateOf<Job?>(null) }
-    
-    LazyColumn(
+
+    // for ui
+    val showColorDialog = remember { mutableStateOf(false) }
+    var selectedColor by remember { mutableStateOf(settings.keyColor) }
+    val showLxnsDialog = remember { mutableStateOf(false) }
+    val showWaterfishDialog = remember { mutableStateOf(false) }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures {
-                    focusManager.clearFocus()
-                }
-            },
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(16.dp)
     ) {
-        item {
-            SettingsCard("查分器","数据来自落雪查分器，水鱼仅同步成绩。"){
-                SettingItemColumn("落雪 API 密钥"){
-                    PasswordTextField(
-                        value = settings.lxnsToken,
-                        onValueChange = { 
-                            maiupViewModel.updateLxnsAPI(it)
-                            // 防抖:取消之前的任务,启动新的任务
-                            debounceJob?.cancel()
-                            debounceJob = coroutineScope.launch {
-                                delay(3000)
-                                // 检查token是否在3秒内没有变化
-                                if (settings.lxnsToken == it) {
-                                    playerDataViewModel.reload(it)
-                                }
-                            }
-                        },
-                        placeholder = "请输入API密钥"
-                    )
+        Card {
+            SuperArrow(
+                title = "落雪设定",
+                summary = "数据来源",
+                onClick = { showLxnsDialog.value = true }
+            )
+            SuperArrow(
+                title = "水鱼设定",
+                summary = "暂未支持 / 仅同步数据",
+                enabled = false,
+                onClick = { /* TODO 检查更新 */ }
+            )
+        }
+
+        Card {
+            WindowDropdown(
+                title = "主题",
+                items = ThemeMode.getList().map { it.getName() },
+                selectedIndex = settings.themeMode.ordinal,
+                onSelectedIndexChange = {
+                    maiupViewModel.updateTheme(ThemeMode.fromInt(it))
                 }
-                SettingItemColumn("水鱼成绩导入 Token"){
-                    PasswordTextField(
-                        value = settings.waterfishToken,
-                        onValueChange = { maiupViewModel.updateWaterfishToken(it) },
-                        placeholder = "请输入Token"
-                    )
-                }
+            )
+            SuperSwitch(
+                title = "动态取色",
+                checked = settings.isMonet,
+                onCheckedChange = { maiupViewModel.updateMonet(it) }
+            )
+            SuperArrow(
+                title = "选择颜色",
+                summary =
+                    "#"+settings.keyColor.value.toHexString(HexFormat.UpperCase).take(8),
+                enabled = settings.isMonet,
+                onClick = { showColorDialog.value = true }
+            )
+        }
+
+        Card {
+            SuperArrow(
+                title = "检查更新",
+                summary = "Version: ${AppConfig.VERSION_NAME}",
+                onClick = { /* TODO 检查更新 */ }
+            )
+            SuperArrow(
+                title = "查看源代码",
+                summary = "GitHub",
+                onClick = { openUrl("https://github.com/Catfootbeats/maiup") }
+            )
+        }
+    }
+
+    WindowDialog(
+        title = "选择颜色",
+        show = showColorDialog,
+        onDismissRequest = { showColorDialog.value = false } // 关闭对话框
+    ) {
+        Column {
+            ColorPalette(
+                color = selectedColor,
+                onColorChanged = { selectedColor = it }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TextButton(
+                    modifier = Modifier.weight(1f),
+                    text = "取消",
+                    onClick = { showColorDialog.value = false } // 关闭对话框
+                )
+                TextButton(
+                    modifier = Modifier.weight(1f),
+                    text = "确定",
+                    colors = ButtonDefaults.textButtonColorsPrimary(), // 使用主题颜色
+                    onClick = {
+                        showColorDialog.value = false // 关闭对话框
+                        maiupViewModel.updateKeyColor(selectedColor)
+                    })
             }
         }
-        item {
-            SettingsCard("外观"){
-                SettingItemRow("主题"){
-                    ThemeToggler()
-                }
+    }
+
+    WindowDialog(
+        title = "落雪设定",
+        summary = null,
+        show = showLxnsDialog,
+        onDismissRequest = {
+            if(!settings.lxnsToken.isEmpty()) {
+                showLxnsDialog.value = false
+                playerDataViewModel.reload(settings.lxnsToken)
             }
+        } // 关闭对话框
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            PasswordTextField(
+                value = settings.lxnsToken,
+                lable = "落雪 API 密钥",
+                onValueChange = {
+                    maiupViewModel.updateLxnsAPI(it)
+                },
+            )
+            TextButton(
+                text = "确定",
+                onClick = {
+                    if(!settings.lxnsToken.isEmpty()) {
+                        showLxnsDialog.value = false
+                        playerDataViewModel.reload(settings.lxnsToken)
+                    }
+                }, // 关闭对话框
+                modifier = Modifier.fillMaxWidth()
+            )
         }
-        item {
-            SettingsCard("关于 MaiUp"){
-                SettingItemRow("Version: ${AppConfig.VERSION_NAME}"){
-                    TextButton(
-                        onClick = { /* TODO 检查更新 */ },
-                    ){
-                        Text("检查更新")
-                    }
-                }
-                SettingItemRow("查看源代码"){
-                    TextButton(
-                        onClick = { openUrl("https://github.com/Catfootbeats/maiup") },
-                    ){
-                        Text("GitHub")
-                    }
-                }
-            }
+    }
+    WindowDialog(
+        title = "水鱼设定",
+        summary = null,
+        show = showWaterfishDialog,
+        onDismissRequest = { showWaterfishDialog.value = false } // 关闭对话框
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            PasswordTextField(
+                value = settings.waterfishToken,
+                lable = "水鱼 Token",
+                onValueChange = {
+                    maiupViewModel.updateWaterfishToken(it)
+                },
+            )
+            TextButton(
+                text = "确定",
+                onClick = { showLxnsDialog.value = false }, // 关闭对话框
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

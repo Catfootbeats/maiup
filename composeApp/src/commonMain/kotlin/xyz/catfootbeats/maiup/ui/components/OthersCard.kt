@@ -8,16 +8,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,75 +24,64 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import xyz.catfootbeats.maiup.utils.openUrl
 
 @Composable
 fun OthersCard() {
-    Card(
-        modifier = Modifier
-            .width(500.dp),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onSecondary,
-            // contentColor = MaterialTheme.colorScheme.secondary
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize()
-        ) {
-            Text(
-                text = "其他",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val iconItems = remember {
-                    listOf(
-                        IconItemData(
-                            icon = IconSource.Url("https://map.bemanicn.com/favicon.png"),
-                            text = "音游地图",
-                            webUrl = "https://map.bemanicn.com/"
-                        ),
-                        IconItemData(
-                            icon = IconSource.Url("https://maimai.lxns.net/favicon.webp"),
-                            text = "落雪查分器",
-                            webUrl = "https://maimai.lxns.net/"
-                        ),
-                        IconItemData(
-                            icon = IconSource.Url("https://www.diving-fish.com/favicon.ico"),
-                            text = "水鱼查分器",
-                            webUrl = "https://www.diving-fish.com/maimaidx/prober/"
-                        ),
-                        IconItemData(
-                            icon = IconSource.Url("https://shama.dxrating.net/images/version-logo/circle.webp"),
-                            text = "DXRating",
-                            webUrl = "https://dxrating.net/"
-                        ),
-                        IconItemData(
-                            icon = IconSource.Url("https://union.godserver.cn/assets/png/icon-BDHGr2IZ.png"),
-                            text = "Union",
-                            webUrl = "https://union.godserver.cn/"
-                        ),
-                    )
+    val iconItems = remember {
+        listOf(
+            IconItemData(
+                icon = IconSource.Url("https://map.bemanicn.com/favicon.png"),
+                text = "音游地图",
+                webUrl = "https://map.bemanicn.com/"
+            ),
+            IconItemData(
+                icon = IconSource.Url("https://maimai.lxns.net/favicon.webp"),
+                text = "落雪查分器",
+                webUrl = "https://maimai.lxns.net/"
+            ),
+            IconItemData(
+                icon = IconSource.Url("https://www.diving-fish.com/favicon.ico"),
+                text = "水鱼查分器",
+                webUrl = "https://www.diving-fish.com/maimaidx/prober/"
+            ),
+            IconItemData(
+                icon = IconSource.Url("https://shama.dxrating.net/images/version-logo/circle.webp"),
+                text = "DXRating",
+                webUrl = "https://dxrating.net/"
+            ),
+            IconItemData(
+                icon = IconSource.Url("https://union.godserver.cn/assets/png/icon-BDHGr2IZ.png"),
+                text = "Union",
+                webUrl = "https://union.godserver.cn/"
+            ),
+        )
+    }
+    Column {
+        SmallTitle("其他")
+        Card(Modifier.fillMaxWidth()){
+                FlowRow(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    iconItems.forEach { item ->
+                        IconGridItem(
+                            icon = item.icon,
+                            text = item.text,
+                            webUrl = item.webUrl,
+                            openExternal = item.openExternal
+                        )
+                    }
                 }
-
-                iconItems.forEach { item ->
-                    IconGridItem(
-                        icon = item.icon,
-                        text = item.text,
-                        webUrl = item.webUrl,
-                        openExternal = item.openExternal
-                    )
-                }
-            }
         }
     }
+
 }
 
 sealed class IconSource {
@@ -158,10 +143,10 @@ fun IconGridItem(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodySmall,
+                style = MiuixTheme.textStyles.body2,
                 maxLines = 1
             )
         }

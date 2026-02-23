@@ -8,11 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -27,36 +22,25 @@ import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
 import ir.ehsannarmani.compose_charts.models.IndicatorPosition
 import ir.ehsannarmani.compose_charts.models.LabelProperties
 import ir.ehsannarmani.compose_charts.models.Line
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import xyz.catfootbeats.maiup.model.RatingTrend
 
 @Composable
-fun RatingTrendCard(ratingTrendList:List<RatingTrend>?) {
-    Card(
-        modifier = Modifier
-            .width(500.dp)
-            .height(300.dp),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onSecondary,
-            // contentColor = MaterialTheme.colorScheme.secondary
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize()
-        ) {
-            Text(
-                text = "Rating 趋势",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+fun RatingTrendCard(ratingTrendList: List<RatingTrend>?) {
+    Column {
+        SmallTitle(
+            text = "Rating 趋势",
+        )
+        Card(modifier = Modifier.height(300.dp)) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if(ratingTrendList!=null) {
+                if (ratingTrendList != null) {
                     LineChart(
                         modifier = Modifier.fillMaxSize(),
                         data = remember(ratingTrendList) {
@@ -73,8 +57,8 @@ fun RatingTrendCard(ratingTrendList:List<RatingTrend>?) {
                             )
                         },
                         indicatorProperties = HorizontalIndicatorProperties(
-                            textStyle = MaterialTheme.typography.labelSmall
-                                .copy(color = MaterialTheme.colorScheme.onBackground),
+                            textStyle = MiuixTheme.textStyles.footnote2
+                                .copy(color = MiuixTheme.colorScheme.onBackground),
                             position = IndicatorPosition.Horizontal.End,
                             contentBuilder = { indicator ->
                                 indicator.toInt().toString()
@@ -83,25 +67,24 @@ fun RatingTrendCard(ratingTrendList:List<RatingTrend>?) {
                         ),
                         labelProperties = LabelProperties(
                             enabled = true,
-                            textStyle = MaterialTheme.typography.labelSmall
-                                .copy(color = MaterialTheme.colorScheme.onBackground),
+                            textStyle = MiuixTheme.textStyles.footnote1
+                                .copy(color = MiuixTheme.colorScheme.onBackground),
                             labels = ratingTrendList
-                                .filterIndexed { index, _ -> index % ratingTrendList.size/4 == 0 }
+                                .filterIndexed { index, _ -> index % ratingTrendList.size / 4 == 0 }
                                 .map { it.date },
                             padding = 4.dp
                         ),
-                        maxValue = ratingTrendList.map { it.total.toDouble() }.max()+100.0,
-                        minValue = if((ratingTrendList.map { it.total.toDouble() }.min()-100.0)<0)
-                        {0.0}
-                        else{
-                            ratingTrendList.map { it.total.toDouble() }.min()-100.0
+                        maxValue = ratingTrendList.map { it.total.toDouble() }.max() + 100.0,
+                        minValue = if ((ratingTrendList.map { it.total.toDouble() }.min() - 100.0) < 0) {
+                            0.0
+                        } else {
+                            ratingTrendList.map { it.total.toDouble() }.min() - 100.0
                         },
                         animationMode = AnimationMode.Together(delayBuilder = { it * 500L }),
                     )
                 } else {
                     CircularProgressIndicator(
                         modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }

@@ -1,337 +1,241 @@
 package xyz.catfootbeats.maiup.ui.pages
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.*
 import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
+import top.yukonga.miuix.kmp.basic.*
+import top.yukonga.miuix.kmp.extra.LocalWindowBottomSheetState
+import top.yukonga.miuix.kmp.extra.SuperCheckbox
+import top.yukonga.miuix.kmp.extra.WindowBottomSheet
+import top.yukonga.miuix.kmp.extra.WindowListPopup
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.*
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.overScrollVertical
 import xyz.catfootbeats.maiup.model.Game
-import xyz.catfootbeats.maiup.resources.Res
-import xyz.catfootbeats.maiup.resources.chu
-import xyz.catfootbeats.maiup.resources.mai
-import xyz.catfootbeats.maiup.ui.animation.AnimatedDialog
+import xyz.catfootbeats.maiup.model.getName
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
-import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 
 enum class AppDestinations(
     val label: String,
     val icon: ImageVector,
     val desc: String,
-    ) {
+) {
     // 首页 直接显示用户的成绩 头像 收藏品 背景框 点击即可跳转更新成绩 可以改变中二模式和舞萌模式
-    HOME("首页", Icons.Default.Home,"账号详情"),
+    HOME("首页", MiuixIcons.Contacts, "账号详情"),
+
     // 搜索 可以查找游玩的歌曲
-    SEARCH("搜索", Icons.Default.MusicNote,"乐曲搜索"),
+    SEARCH("搜索", MiuixIcons.Music, "乐曲搜索"),
+
     // 成绩 可以查看 b50 与 历史成绩
-    RANK("成绩", Icons.Default.DataExploration,"成绩"),
+    RANK("成绩", MiuixIcons.TopDownloads, "成绩"),
+
     // 设置 用于设置查分器 同步成绩设定
-    SETTINGS("设置", Icons.Default.Settings,"设置"),
+    SETTINGS("设置", MiuixIcons.Settings, "设置"),
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NavBar(){
+fun NavBar() {
     val maiupViewModel: MaiupViewModel = koinViewModel()
-    val playerDataViewModel: PlayerDataViewModel = koinViewModel()
+
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
+
+    // haze 背景模糊
+    val hazeState = remember { HazeState() }
+    val hazeStyle = HazeStyle(
+        backgroundColor = MiuixTheme.colorScheme.surface,
+        tint = HazeTint(MiuixTheme.colorScheme.surface.copy(0.1f))
+    )
+    // 顶部模式栏
+    val showPopup = remember { mutableStateOf(false) }
+    val popupItems = listOf(Game.MAI, Game.CHU)
+    // 同步对话框
+    val showSyncSheet = remember { mutableStateOf(false) }
+
     val settings by maiupViewModel.settingsState.collectAsState()
     var upMai by remember { mutableStateOf(true) }
     var upChu by remember { mutableStateOf(false) }
     var upLxns by remember { mutableStateOf(settings.lxnsToken.isNotEmpty()) }
     var upWaterfish by remember { mutableStateOf(settings.waterfishToken.isNotEmpty()) }
 
-    @Composable
-    fun SyncFilterChip(
-        selected: Boolean,
-        onSelectedChange: () -> Unit,
-        label: String,
-        enable: Boolean,
-        modifier: Modifier = Modifier
-    ) {
-        FilterChip(
-            selected = selected,
-            onClick = { 
-                if (enable) {
-                    onSelectedChange()
-                }
-            },
-            label = { Text(
-                label,
-                color = if (!enable)
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                else 
-                    MaterialTheme.colorScheme.onSurface
-            )},
-            leadingIcon = if (selected) {
-                { Icon(Icons.Default.Check, contentDescription = null) }
-            } else null,
-            modifier = modifier,
-            enabled = enable,
-            colors = FilterChipDefaults.filterChipColors(
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-            )
-        )
-    }
 
-    // 检测lxnsToken是否为空
-    var showTokenDialog by remember { mutableStateOf(false) }
-    var tokenInput by remember { mutableStateOf("") }
+
+    val topAppBarScrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
 
     // 等待设置加载完成并延迟一秒
     LaunchedEffect(settings) {
-            // 延迟一秒后再检测
-            delay(1000)
-            showTokenDialog = settings.lxnsToken.isEmpty()
-            tokenInput = settings.lxnsToken
-            // 根据token状态更新同步选项
-            upLxns = settings.lxnsToken.isNotEmpty()
-            upWaterfish = settings.waterfishToken.isNotEmpty()
-    }
-    // Token输入对话框
-    AnimatedDialog(
-        visible = showTokenDialog && currentDestination != AppDestinations.SETTINGS
-    ) {
-        var placeholder = "不输用不了喵~"
-        AlertDialog(
-            onDismissRequest = { placeholder="你逃不掉喵~"/* 不可点击边缘取消 */ },
-            title = { Text("输入落雪 Token 喵~") },
-            text = {
-                Column {
-                    Spacer(Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = tokenInput,
-                        onValueChange = { tokenInput = it },
-                        placeholder = { Text(placeholder) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (tokenInput.isNotEmpty()) {
-                            maiupViewModel.updateLxnsAPI(tokenInput)
-                            playerDataViewModel.reload(tokenInput)
-                            showTokenDialog = false
-                        }
-                    },
-                    enabled = tokenInput.isNotEmpty()
-                ) {
-                    Text("确认")
-                }
-            },
-            dismissButton = null // 禁用取消按钮
-        )
+        // 根据token状态更新同步选项
+        upLxns = settings.lxnsToken.isNotEmpty()
+        upWaterfish = settings.waterfishToken.isNotEmpty()
     }
 
     // 同步对话框
-    AnimatedDialog(
-        visible = showDialog
+    WindowBottomSheet(
+        show = showSyncSheet,
+        title = "同步成绩",
+        onDismissRequest = { showSyncSheet.value = false }
     ) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text("同步成绩") },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        "来源",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    // 第一排：舞萌DX, 中二节奏
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SyncFilterChip(
-                            selected = upMai,
-                            onSelectedChange = { upMai = !upMai },
-                            label = "舞萌DX",
-                            enable = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                        SyncFilterChip(
-                            selected = upChu,
-                            onSelectedChange = { upChu = !upChu },
-                            label = "中二节奏",
-                            enable = false,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Text(
-                        "查分器",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    // 第二排：落雪, 水鱼
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SyncFilterChip(
-                            selected = upLxns,
-                            onSelectedChange = { upLxns = !upLxns },
-                            label = "落雪",
-                            enable = settings.lxnsToken.isNotEmpty(),
-                            modifier = Modifier.weight(1f)
-                        )
-                        SyncFilterChip(
-                            selected = upWaterfish,
-                            onSelectedChange = { upWaterfish = !upWaterfish },
-                            label = "水鱼",
-                            enable = settings.waterfishToken.isNotEmpty(),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // TODO: 实现同步功能
-                        showDialog = false
-                    }
-                ) {
-                    Text("同步")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDialog = false }
-                ) {
-                    Text("取消")
-                }
-            }
-        )
-    }
-
-    NavigationSuiteScaffold(
-        modifier = Modifier,
-        navigationSuiteItems = {
-            AppDestinations.entries.forEach {
-                item(
-                    modifier = Modifier.padding(8.dp),
-                    icon = {
-                        Column {
-                            Icon(
-                                it.icon,
-                                contentDescription = it.label
-                            )
-                        }
-                    },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
+        val dismiss = LocalWindowBottomSheetState.current
+        Column(modifier = Modifier.padding(bottom = 32.dp)) {
+            Card {
+                SuperCheckbox(
+                    title = "舞萌DX",
+                    checked = upMai,
+                    onCheckedChange = { upMai = it }
+                )
+                SuperCheckbox(
+                    title = "中二节奏",
+                    checked = upChu,
+                    onCheckedChange = { upChu = it }
+                )
+                HorizontalDivider()
+                SuperCheckbox(
+                    title = "落雪",
+                    checked = upLxns,
+                    enabled = settings.lxnsToken.isNotEmpty(),
+                    onCheckedChange = { upLxns = it }
+                )
+                SuperCheckbox(
+                    title = "水鱼",
+                    checked = upWaterfish,
+                    enabled = settings.waterfishToken.isNotEmpty(),
+                    onCheckedChange = { upWaterfish = it }
                 )
             }
-        }
-    ) {
-        Column{
-            TopAppBar(
-                title = {
-                    Text(
-                        text = currentDestination.desc,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                },
-                actions = {
-                    // 同步按钮
-                    IconButton(onClick = { showDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Update,
-                            contentDescription = "更新"
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // 模式按钮
-                        Button(
-                            onClick = { expanded = !expanded },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            modifier = Modifier.padding(end = 10.dp) //为了让尾部和卡片对齐
-                        ) {
-                                Text(
-                                    text = when (settings.game) {
-                                        Game.CHU -> "中二节奏"
-                                        Game.MAI -> "舞萌DX"
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.width(60.dp)
-                                )
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "模式"
-                                )
-                        }
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            offset = DpOffset(50.dp, 0.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            DropdownMenuItem(
-                                leadingIcon = {
-                                    Image(
-                                        painter = painterResource(Res.drawable.chu),
-                                        contentDescription = "中二节奏",
-                                        modifier = Modifier.height(24.dp)
-                                    )
-                                },
-                                text = { Text("中二节奏") },
-                                onClick = {
-                                    expanded = false
-                                    maiupViewModel.updateAppMode(Game.CHU)
-                                }
-                            )
-                            DropdownMenuItem(
-                                leadingIcon = {
-                                    Image(
-                                        painter = painterResource(Res.drawable.mai),
-                                        contentDescription = "舞萌DX",
-                                        modifier = Modifier.height(24.dp)
-                                    )
-                                },
-                                text = { Text("舞萌DX") },
-                                onClick = {
-                                    expanded = false
-                                    maiupViewModel.updateAppMode(Game.MAI)
-                                }
-                            )
-                        }
-                }
+            Spacer(Modifier.height(16.dp))
+            TextButton(
+                text = "同步",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { dismiss?.invoke() /*TODO：同步成绩*/ }
             )
+        }
 
-            when (currentDestination){
-                AppDestinations.HOME -> HomePage()
-                AppDestinations.SEARCH -> SearchPage()
-                AppDestinations.RANK -> RankPage()
-                AppDestinations.SETTINGS -> SettingsPage()
+    }
+    Row {
+        if (LocalWindowInfo.current.containerSize.width.dp >= 1100.dp) {
+            NavigationRail(
+                color = Color.Transparent,
+                modifier = Modifier
+                    .hazeEffect(hazeState) {
+                        style = hazeStyle
+                        blurRadius = 25.dp
+                        noiseFactor = 0f
+                    }
+            ) {
+                AppDestinations.entries.forEach {
+                    NavigationRailItem(
+                        selected = currentDestination == it,
+                        onClick = { currentDestination = it },
+                        icon = it.icon,
+                        label = it.label,
+                    )
+                }
+            }
+        }
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    color = Color.Transparent,
+                    modifier = Modifier
+                        .hazeEffect(hazeState) {
+                            style = hazeStyle
+                            blurRadius = 25.dp
+                            noiseFactor = 0f
+                        },
+                    title = currentDestination.desc,
+                    scrollBehavior = topAppBarScrollBehavior,
+                    actions = {
+                        // 同步按钮
+                        IconButton(onClick = { showSyncSheet.value = true }) {
+                            Icon(
+                                imageVector = MiuixIcons.Update,
+                                contentDescription = null
+                            )
+                        }
+                        // 模式按钮
+                        IconButton(onClick = { showPopup.value = true }) {
+                            Icon(
+                                imageVector = MiuixIcons.Tune,
+                                contentDescription = null
+                            )
+                        }
+                        WindowListPopup(
+                            show = showPopup,
+                            alignment = PopupPositionProvider.Align.Start,
+                            onDismissRequest = { showPopup.value = false } // 关闭弹窗菜单
+                        ) {
+                            ListPopupColumn {
+                                popupItems.forEachIndexed { index, game ->
+                                    DropdownImpl(
+                                        text = game.getName(),
+                                        optionSize = popupItems.size,
+                                        isSelected = settings.game == game,
+                                        onSelectedIndexChange = {
+                                            maiupViewModel.updateAppMode(game)
+                                            showPopup.value = false // 关闭弹窗菜单
+                                        },
+                                        index = index
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                    }
+                )
+            },
+            bottomBar = {
+                if (LocalWindowInfo.current.containerSize.width.dp < 1100.dp) {
+                    NavigationBar(
+                        color = Color.Transparent,
+                        modifier = Modifier
+                            .hazeEffect(hazeState) {
+                                style = hazeStyle
+                                blurRadius = 25.dp
+                                noiseFactor = 0f
+                            }
+                    ) {
+                        AppDestinations.entries.forEach {
+                            NavigationBarItem(
+                                selected = currentDestination == it,
+                                onClick = { currentDestination = it },
+                                icon = it.icon,
+                                label = it.label,
+                            )
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
+            // 内容区域需要考虑 padding
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .hazeSource(state = hazeState)
+                    // 如需添加越界回弹效果，则应在绑定滚动行为之前添加
+                    .overScrollVertical()
+                    // 绑定 TopAppBar 滚动事件
+                    .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
+                contentPadding = PaddingValues(top = paddingValues.calculateTopPadding())
+            ) {
+                item {
+                    when (currentDestination) {
+                        AppDestinations.HOME -> HomePage()
+                        AppDestinations.SEARCH -> SearchPage()
+                        AppDestinations.RANK -> RankPage()
+                        AppDestinations.SETTINGS -> SettingsPage()
+                    }
+                    Spacer(Modifier.height(72.dp))
+                }
             }
         }
     }

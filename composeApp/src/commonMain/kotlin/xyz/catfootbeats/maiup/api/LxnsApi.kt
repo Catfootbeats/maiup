@@ -9,7 +9,7 @@ import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.model.LxnsPlayerMai
 import xyz.catfootbeats.maiup.model.RatingTrend
 import xyz.catfootbeats.maiup.model.Score
-import xyz.catfootbeats.maiup.model.getName
+import xyz.catfootbeats.maiup.model.getApiName
 
 /**
  * 玩家数据 API
@@ -27,7 +27,7 @@ class LxnsApi(
      * @return API 响应，包含玩家信息
      */
     suspend fun getPlayerInfo(userToken: String, game: Game = Game.MAI): ApiResponse<LxnsPlayerMai> {
-        return client.get("$baseUrl/user/${game.getName()}/player") {
+        return client.get("$baseUrl/user/${game.getApiName()}/player") {
             header("X-User-Token", userToken)
             contentType(ContentType.Application.Json)
         }.body()
@@ -44,7 +44,7 @@ class LxnsApi(
         game: Game = Game.MAI,
         version: Int = 25000
     ): ApiResponse<List<RatingTrend>> {
-        return client.get("$baseUrl/user/${game.getName()}/player/trend") {
+        return client.get("$baseUrl/user/${game.getApiName()}/player/trend") {
             header("X-User-Token", userToken)
             parameter("version", version)
             contentType(ContentType.Application.Json)
@@ -58,7 +58,7 @@ class LxnsApi(
      * @return API 响应，包含上传结果
      */
     suspend fun uploadPlayerScores(userToken: String, scores: List<Score>, game: Game = Game.MAI): ApiResponse<Unit> {
-        return client.post("$baseUrl/user/${game.getName()}/player/scores") {
+        return client.post("$baseUrl/user/${game.getApiName()}/player/scores") {
             header("X-User-Token", userToken)
             contentType(ContentType.Application.Json)
             setBody(mapOf("scores" to scores))

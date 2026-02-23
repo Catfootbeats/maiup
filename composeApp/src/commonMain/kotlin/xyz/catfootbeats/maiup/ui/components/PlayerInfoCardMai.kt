@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +15,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import org.jetbrains.compose.resources.painterResource
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import xyz.catfootbeats.maiup.resources.Res
 import xyz.catfootbeats.maiup.resources.default_avatar
 import xyz.catfootbeats.maiup.utils.convertUtcToPlus8
@@ -30,17 +29,7 @@ fun PlayerInfoCardMai(
     rating: Int,
     syncDate: String
 ) {
-    Card(
-        modifier = Modifier
-            .width(500.dp)
-            .wrapContentHeight(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onSecondary,
-            //contentColor = MaterialTheme.colorScheme.secondary
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
+    Card {
         Row(
             modifier = Modifier
                 .padding(16.dp)
@@ -61,18 +50,16 @@ fun PlayerInfoCardMai(
             ) {
                 Text(
                     text = playerId,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MiuixTheme.textStyles.title2
                 )
                 Text(
                     text = "Rating: $rating",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MiuixTheme.textStyles.body1,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = "同步日期: ${convertUtcToPlus8(syncDate)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style =  MiuixTheme.textStyles.body2,
                 )
             }
         }

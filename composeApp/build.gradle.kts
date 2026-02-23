@@ -27,7 +27,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
-            baseName = "ComposeApp"
+            baseName = "MaiUp"
             isStatic = true
         }
     }
@@ -44,7 +44,7 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
-            implementation(libs.compose.material3)
+            //implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
@@ -52,10 +52,10 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             api(libs.androidx.lifecycle.viewmodel)
             // material3 adaptive navigation suite
-            implementation(libs.material3.adaptive.navigation.suite)
+            //implementation(libs.material3.adaptive.navigation.suite)
             // material icons
-            implementation(libs.material)
-            implementation(libs.material.icons.extended)
+            //implementation(libs.material)
+            //implementation(libs.material.icons.extended)
             // koin
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
@@ -73,6 +73,15 @@ kotlin {
             implementation(libs.coil.network.ktor2)
             // 图表
             implementation(libs.compose.charts)
+            // miuix
+            implementation("top.yukonga.miuix.kmp:miuix:0.8.4")
+            // 添加 miuix-icons 以获取更多图标
+            implementation("top.yukonga.miuix.kmp:miuix-icons:0.8.4")
+            implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui:0.8.4")
+            implementation("top.yukonga.miuix.kmp:miuix-navigation3-adaptive:0.8.4")
+            implementation("androidx.navigation3:navigation3-runtime:1.1.0-alpha04")
+            // 模糊背景
+            implementation("dev.chrisbanes.haze:haze:1.7.2")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
