@@ -20,7 +20,7 @@ import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 @Composable
 fun AppTheme(content: @Composable () -> Unit) {
     val viewModel: MaiupViewModel = koinViewModel()
-    val settings by viewModel.settingsState.collectAsState()
+    val settings by viewModel.settings.collectAsState()
 
     // 根据主题模式确定是否为深色主题
     val isDarkTheme = when (settings.themeMode) {

@@ -1,7 +1,6 @@
 package xyz.catfootbeats.maiup.ui.pages
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,7 +33,7 @@ fun HomePage() {
     val dataError by playerDataViewModel.error.collectAsState()
 
     // 检测lxnsToken是否为空
-    val settings by maiupViewModel.settingsState.collectAsState()
+    val settings by maiupViewModel.settings.collectAsState()
     val showTokenDialog = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         // 延迟一秒后再检测

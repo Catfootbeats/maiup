@@ -31,7 +31,7 @@ import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 @Composable
 fun SettingsPage() {
     val maiupViewModel: MaiupViewModel = koinViewModel()
-    val settings by maiupViewModel.settingsState.collectAsState()
+    val settings by maiupViewModel.settings.collectAsState()
     val playerDataViewModel: PlayerDataViewModel = koinViewModel()
 
     // for ui
@@ -55,7 +55,7 @@ fun SettingsPage() {
             SuperArrow(
                 title = "落雪 OAuth 授权",
                 summary = "未授权",
-                onClick = { openUrl("") }
+                onClick = { /*启动Http服务，监听回调，跳转到外部浏览器授权地址*/ }
             )
             SuperArrow(
                 title = "水鱼设定",

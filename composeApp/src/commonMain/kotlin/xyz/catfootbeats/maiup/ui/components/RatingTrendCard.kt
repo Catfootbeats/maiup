@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.AnimationMode
@@ -41,47 +42,51 @@ fun RatingTrendCard(ratingTrendList: List<RatingTrend>?) {
                 contentAlignment = Alignment.Center
             ) {
                 if (ratingTrendList != null) {
-                    LineChart(
-                        modifier = Modifier.fillMaxSize(),
-                        data = remember(ratingTrendList) {
-                            listOf(
-                                Line(
-                                    values = ratingTrendList.map { it.total.toDouble() },
-                                    color = SolidColor(Color(0xFF23af92)),
-                                    firstGradientFillColor = Color(0xFF2BC0A1).copy(alpha = .5f),
-                                    secondGradientFillColor = Color.Transparent,
-                                    strokeAnimationSpec = tween(2000, easing = EaseInOutCubic),
-                                    gradientAnimationDelay = 1000,
-                                    drawStyle = DrawStyle.Stroke(width = 2.dp), // 线条粗细
+                    if (ratingTrendList.size < 5) {
+                        Text("数据不足，无法生成")
+                    } else {
+                        LineChart(
+                            modifier = Modifier.fillMaxSize(),
+                            data = remember(ratingTrendList, LocalWindowInfo.current.containerSize) {
+                                listOf(
+                                    Line(
+                                        values = ratingTrendList.map { it.total.toDouble() },
+                                        color = SolidColor(Color(0xFF23af92)),
+                                        firstGradientFillColor = Color(0xFF2BC0A1).copy(alpha = .5f),
+                                        secondGradientFillColor = Color.Transparent,
+                                        strokeAnimationSpec = tween(2000, easing = EaseInOutCubic),
+                                        gradientAnimationDelay = 1000,
+                                        drawStyle = DrawStyle.Stroke(width = 2.dp), // 线条粗细
+                                    )
                                 )
-                            )
-                        },
-                        indicatorProperties = HorizontalIndicatorProperties(
-                            textStyle = MiuixTheme.textStyles.footnote2
-                                .copy(color = MiuixTheme.colorScheme.onBackground),
-                            position = IndicatorPosition.Horizontal.End,
-                            contentBuilder = { indicator ->
-                                indicator.toInt().toString()
                             },
-                            padding = 4.dp
-                        ),
-                        labelProperties = LabelProperties(
-                            enabled = true,
-                            textStyle = MiuixTheme.textStyles.footnote1
-                                .copy(color = MiuixTheme.colorScheme.onBackground),
-                            labels = ratingTrendList
-                                .filterIndexed { index, _ -> index % ratingTrendList.size / 4 == 0 }
-                                .map { it.date },
-                            padding = 4.dp
-                        ),
-                        maxValue = ratingTrendList.map { it.total.toDouble() }.max() + 100.0,
-                        minValue = if ((ratingTrendList.map { it.total.toDouble() }.min() - 100.0) < 0) {
-                            0.0
-                        } else {
-                            ratingTrendList.map { it.total.toDouble() }.min() - 100.0
-                        },
-                        animationMode = AnimationMode.Together(delayBuilder = { it * 500L }),
-                    )
+                            indicatorProperties = HorizontalIndicatorProperties(
+                                textStyle = MiuixTheme.textStyles.footnote2
+                                    .copy(color = MiuixTheme.colorScheme.onBackground),
+                                position = IndicatorPosition.Horizontal.End,
+                                contentBuilder = { indicator ->
+                                    indicator.toInt().toString()
+                                },
+                                padding = 4.dp
+                            ),
+                            labelProperties = LabelProperties(
+                                enabled = true,
+                                textStyle = MiuixTheme.textStyles.footnote1
+                                    .copy(color = MiuixTheme.colorScheme.onBackground),
+                                labels = ratingTrendList
+                                    .filterIndexed { index, _ -> index % ratingTrendList.size / 4 == 0 }
+                                    .map { it.date },
+                                padding = 4.dp
+                            ),
+                            maxValue = ratingTrendList.map { it.total.toDouble() }.max() + 100.0,
+                            minValue = if ((ratingTrendList.map { it.total.toDouble() }.min() - 100.0) < 0) {
+                                0.0
+                            } else {
+                                ratingTrendList.map { it.total.toDouble() }.min() - 100.0
+                            },
+                            animationMode = AnimationMode.Together(delayBuilder = { it * 500L }),
+                        )
+                    }
                 } else {
                     CircularProgressIndicator(
                         modifier = Modifier.padding(16.dp),

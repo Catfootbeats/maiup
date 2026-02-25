@@ -30,7 +30,7 @@ class PlayerDataViewModel(
 
     init {
         viewModelScope.launch {
-            maiupViewModel.settingsState.collect { settings ->
+            maiupViewModel.settings.collect { settings ->
                 val token = settings.lxnsToken
                 reload(token)
             }

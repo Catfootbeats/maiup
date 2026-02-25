@@ -11,7 +11,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import dev.chrisbanes.haze.*
-import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.extra.LocalWindowBottomSheetState
@@ -62,7 +61,7 @@ fun NavBar() {
     // 同步对话框
     val showSyncSheet = remember { mutableStateOf(false) }
 
-    val settings by maiupViewModel.settingsState.collectAsState()
+    val settings by maiupViewModel.settings.collectAsState()
     var upMai by remember { mutableStateOf(true) }
     var upChu by remember { mutableStateOf(false) }
     var upLxns by remember { mutableStateOf(settings.lxnsToken.isNotEmpty()) }
