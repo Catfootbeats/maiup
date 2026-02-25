@@ -35,7 +35,7 @@ enum class AppDestinations(
     HOME("首页", MiuixIcons.Contacts, "账号详情"),
 
     // 搜索 可以查找游玩的歌曲
-    SEARCH("搜索", MiuixIcons.Music, "乐曲搜索"),
+    SEARCH("搜索", MiuixIcons.Music, "搜索"),
 
     // 成绩 可以查看 b50 与 历史成绩
     RANK("成绩", MiuixIcons.TopDownloads, "成绩"),

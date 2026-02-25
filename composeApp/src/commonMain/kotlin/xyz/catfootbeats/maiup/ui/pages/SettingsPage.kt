@@ -53,6 +53,11 @@ fun SettingsPage() {
                 onClick = { showLxnsDialog.value = true }
             )
             SuperArrow(
+                title = "落雪 OAuth 授权",
+                summary = "未授权",
+                onClick = { openUrl("") }
+            )
+            SuperArrow(
                 title = "水鱼设定",
                 summary = "暂未支持 / 仅同步数据",
                 enabled = false,
