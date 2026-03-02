@@ -28,10 +28,12 @@ import xyz.catfootbeats.maiup.utils.openUrl
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 
+const val OAuthURL = "https://maimai.lxns.net/oauth/authorize?response_type=code&client_id=6d445a1e-2c91-4a57-a029-6f7bc522c732&redirect_uri=http%3A%2F%2Flocalhost%3A5033%2Fcallback&scope=read_user_profile+read_player"
+
 @Composable
 fun SettingsPage() {
-    val maiupViewModel: MaiupViewModel = koinViewModel()
-    val settings by maiupViewModel.settings.collectAsState()
+    val maiup: MaiupViewModel = koinViewModel()
+    val settings by maiup.settings.collectAsState()
     val playerDataViewModel: PlayerDataViewModel = koinViewModel()
 
     // for ui
@@ -55,7 +57,10 @@ fun SettingsPage() {
             SuperArrow(
                 title = "落雪 OAuth 授权",
                 summary = "未授权",
-                onClick = { /*启动Http服务，监听回调，跳转到外部浏览器授权地址*/ }
+                onClick = {
+                    /*启动Http服务，监听回调，跳转到外部浏览器授权地址*/
+                    openUrl(OAuthURL)
+                }
             )
             SuperArrow(
                 title = "水鱼设定",
@@ -71,18 +76,18 @@ fun SettingsPage() {
                 items = ThemeMode.getList().map { it.getName() },
                 selectedIndex = settings.themeMode.ordinal,
                 onSelectedIndexChange = {
-                    maiupViewModel.updateTheme(ThemeMode.fromInt(it))
+                    maiup.updateTheme(ThemeMode.fromInt(it))
                 }
             )
             SuperSwitch(
                 title = "动态取色",
                 checked = settings.isMonet,
-                onCheckedChange = { maiupViewModel.updateMonet(it) }
+                onCheckedChange = { maiup.updateMonet(it) }
             )
             SuperArrow(
                 title = "选择颜色",
                 summary =
-                    "#"+settings.keyColor.value.toHexString(HexFormat.UpperCase).take(8),
+                    "#" + settings.keyColor.value.toHexString(HexFormat.UpperCase).take(8),
                 enabled = settings.isMonet,
                 onClick = { showColorDialog.value = true }
             )
@@ -128,7 +133,7 @@ fun SettingsPage() {
                     colors = ButtonDefaults.textButtonColorsPrimary(), // 使用主题颜色
                     onClick = {
                         showColorDialog.value = false // 关闭对话框
-                        maiupViewModel.updateKeyColor(selectedColor)
+                        maiup.updateKeyColor(selectedColor)
                     })
             }
         }
@@ -139,7 +144,7 @@ fun SettingsPage() {
         summary = null,
         show = showLxnsDialog,
         onDismissRequest = {
-            if(!settings.lxnsToken.isEmpty()) {
+            if (!settings.lxnsToken.isEmpty()) {
                 showLxnsDialog.value = false
                 playerDataViewModel.reload(settings.lxnsToken)
             }
@@ -150,13 +155,13 @@ fun SettingsPage() {
                 value = settings.lxnsToken,
                 lable = "落雪 API 密钥",
                 onValueChange = {
-                    maiupViewModel.updateLxnsAPI(it)
+                    maiup.updateLxnsToken(it)
                 },
             )
             TextButton(
                 text = "确定",
                 onClick = {
-                    if(!settings.lxnsToken.isEmpty()) {
+                    if (!settings.lxnsToken.isEmpty()) {
                         showLxnsDialog.value = false
                         playerDataViewModel.reload(settings.lxnsToken)
                     }
@@ -176,7 +181,7 @@ fun SettingsPage() {
                 value = settings.waterfishToken,
                 lable = "水鱼 Token",
                 onValueChange = {
-                    maiupViewModel.updateWaterfishToken(it)
+                    maiup.updateWaterfishToken(it)
                 },
             )
             TextButton(

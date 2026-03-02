@@ -9,13 +9,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import xyz.catfootbeats.maiup.api.LxnsApi
+import xyz.catfootbeats.maiup.model.ApiResponse
 import xyz.catfootbeats.maiup.model.LxnsPlayerMai
 import xyz.catfootbeats.maiup.model.RatingTrend
 
 class PlayerDataViewModel(
     private val lxnsApi: LxnsApi,
     private val maiupViewModel: MaiupViewModel
-): ViewModel() {
+) : ViewModel() {
     private val _lxnsPlayerMaiInfo = MutableStateFlow(LxnsPlayerMai())
     val lxnsPlayerMaiInfo: StateFlow<LxnsPlayerMai> = _lxnsPlayerMaiInfo.asStateFlow()
     private val _lxnsRatingTrend = MutableStateFlow<List<RatingTrend>?>(null)
@@ -37,7 +38,7 @@ class PlayerDataViewModel(
         }
     }
 
-    fun reload(token: String){
+    fun reload(token: String) {
         // 取消之前的重试任务
         retryJob?.cancel()
         viewModelScope.launch {
@@ -55,20 +56,31 @@ class PlayerDataViewModel(
      * @param userToken 用户 Token
      * @param apiCall API调用函数
      * @param onSuccess 成功回调
-     * @param onError 错误回调
+     * @param onFailed 失败回调
      * @param onRetry 重试回调
      */
     private fun <T> handleApiCall(
         userToken: String,
-        apiCall: suspend (String) -> T,
-        onSuccess: (T) -> Unit,
-        onRetry: suspend (String) -> T
+        apiCall: suspend (String) -> ApiResponse<T>,
+        onSuccess: (ApiResponse<T>) -> Unit,
+        onFailed: (ApiResponse<T>) -> Unit = {},
+        onRetry: suspend (String) -> ApiResponse<T>
     ) {
         _error.value = null
         viewModelScope.launch {
             try {
                 val response = apiCall(userToken)
-                onSuccess(response)
+                when {
+                    response.success && response.code == 200 -> onSuccess(response)
+                    response.code == 401 -> {
+                        _error.value = "落雪查分器 Token 错误喵"
+                        onFailed(response)
+                    }
+                    else -> {
+                        _error.value = "获取玩家信息失败: ${response.code}喵"
+                        onFailed(response)
+                    }
+                }
             } catch (e: Exception) {
                 if (e.message?.contains("No address associated with hostname") == true) {
                     _error.value = "你没联网喵~"
@@ -102,19 +114,9 @@ class PlayerDataViewModel(
             userToken = userToken,
             apiCall = { lxnsApi.getPlayerTrend(it) },
             onSuccess = { response ->
-                when {
-                    response.success && response.code == 200 -> {
-                        _lxnsRatingTrend.value = response.data
-                    }
-                    response.code == 401 -> {
-                        _error.value = "落雪查分器 Token 错误喵"
-                    }
-                    else -> {
-                        _error.value = "获取玩家信息失败: ${response.code}喵"
-                    }
-                }
+                _lxnsRatingTrend.value = response.data
             },
-            onRetry = { lxnsApi.getPlayerTrend(it) }
+            onRetry = { lxnsApi.getPlayerTrend(it) },
         )
     }
 
@@ -127,20 +129,10 @@ class PlayerDataViewModel(
             userToken = userToken,
             apiCall = { lxnsApi.getPlayerInfo(it) },
             onSuccess = { response ->
-                when {
-                    response.success && response.code == 200 -> {
-                        _lxnsPlayerMaiInfo.value = response.data!!
-                    }
-                    response.code == 401 -> {
-                        _error.value = "落雪查分器Token错误"
-                    }
-                    else -> {
-                        _error.value = "获取玩家信息失败: ${response.code}"
-                    }
-                }
+                _lxnsPlayerMaiInfo.value = response.data!!
                 _isLoad.value = true
             },
-            onRetry = { lxnsApi.getPlayerInfo(it) }
+            onRetry = { lxnsApi.getPlayerInfo(it) },
         )
     }
 
@@ -158,8 +150,6 @@ class PlayerDataViewModel(
                 }
             } catch (e: Exception) {
                 _error.value = e.message ?: "上传分数失败"
-            }finally {
-                _isLoad.value = true
             }
         }
     }

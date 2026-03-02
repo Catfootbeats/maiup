@@ -29,7 +29,6 @@ class MaiupViewModel(
         _settings.value = _settings.value.copy(game = game)
         viewModelScope.launch { preferenceRepository.updateAppMode(game) }
     }
-
     fun updateKeyColor(keyColor: Color) {
         _settings.value = _settings.value.copy(keyColor = keyColor)
         viewModelScope.launch { preferenceRepository.updateKeyColor(keyColor) }
@@ -42,12 +41,10 @@ class MaiupViewModel(
         _settings.value = _settings.value.copy(themeMode = themeMode)
         viewModelScope.launch { preferenceRepository.updateTheme(themeMode) }
     }
-
-    fun updateLxnsAPI(lxnsAPI: String) {
+    fun updateLxnsToken(lxnsAPI: String) {
         _settings.value = _settings.value.copy(lxnsToken = lxnsAPI)
         viewModelScope.launch { preferenceRepository.updateLxnsAPI(lxnsAPI) }
     }
-
     fun updateWaterfishToken(waterfishToken: String) {
         _settings.value = _settings.value.copy(waterfishToken = waterfishToken)
         viewModelScope.launch {

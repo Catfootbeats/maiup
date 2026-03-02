@@ -58,7 +58,7 @@ fun HomePage() {
                 value = settings.lxnsToken,
                 lable = "输入落雪 API 密钥喵~",
                 onValueChange = {
-                    maiupViewModel.updateLxnsAPI(it)
+                    maiupViewModel.updateLxnsToken(it)
                 },
             )
             TextButton(

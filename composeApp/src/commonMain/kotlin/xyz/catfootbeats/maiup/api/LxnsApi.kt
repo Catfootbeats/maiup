@@ -11,6 +11,8 @@ import xyz.catfootbeats.maiup.model.RatingTrend
 import xyz.catfootbeats.maiup.model.Score
 import xyz.catfootbeats.maiup.model.getApiName
 
+const val apiUrl: String = "https://maimai.lxns.net/api/v0"
+
 /**
  * 玩家数据 API
  * @param client HttpClient 实例
@@ -18,7 +20,7 @@ import xyz.catfootbeats.maiup.model.getApiName
  */
 class LxnsApi(
     private val client: HttpClient,
-    private val baseUrl: String = "https://maimai.lxns.net/api/v0"
+    private val baseUrl: String = apiUrl
 ) {
 
     /**
