@@ -56,7 +56,8 @@ fun SettingsPage() {
             )
             SuperArrow(
                 title = "落雪 OAuth 授权",
-                summary = "未授权",
+                summary = "暂时还没做好喵~",
+                enabled = false,
                 onClick = {
                     /*启动Http服务，监听回调，跳转到外部浏览器授权地址*/
                     openUrl(OAuthURL)

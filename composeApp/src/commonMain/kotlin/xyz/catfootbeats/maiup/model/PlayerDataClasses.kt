@@ -60,12 +60,31 @@ data class RatingTrend(
 )
 
 /**
+ * Best 50
+ * @property standard_total 旧版本谱面 Best 35 总分
+ * @property dx_total 现版本谱面 Best 15 总分
+ * @property standard 旧版本谱面 Best 35 列表
+ * @property dx 现版本谱面 Best 15 列表
+ */
+@Serializable
+data class Best50(
+    val standard_total: Int,
+    val dx_total: Int,
+    val standard: List<Score>,
+    val dx: List<Score>
+)
+
+/**
  * 难度
  * 宴谱为0
  */
 @Serializable
 enum class LevelIndex{
-    BASIC,ADVANCED,EXPERT,MASTER,ReMASTER
+    @SerialName("0") BASIC,
+    @SerialName("1") ADVANCED,
+    @SerialName("2") EXPERT,
+    @SerialName("3") MASTER,
+    @SerialName("4") ReMASTER
 }
 /**
  * API 响应包装类

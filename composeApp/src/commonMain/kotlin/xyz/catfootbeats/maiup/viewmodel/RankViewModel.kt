@@ -10,20 +10,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import xyz.catfootbeats.maiup.api.LxnsApi
 import xyz.catfootbeats.maiup.model.ApiResponse
-import xyz.catfootbeats.maiup.model.Best50
-import xyz.catfootbeats.maiup.model.LxnsPlayerMai
-import xyz.catfootbeats.maiup.model.RatingTrend
 
-class PlayerDataViewModel(
+class RankViewModel(
     private val lxnsApi: LxnsApi,
     private val maiupViewModel: MaiupViewModel
 ) : ViewModel() {
-    private val _lxnsPlayerMaiInfo = MutableStateFlow(LxnsPlayerMai())
-    val lxnsPlayerMaiInfo: StateFlow<LxnsPlayerMai> = _lxnsPlayerMaiInfo.asStateFlow()
-    private val _lxnsRatingTrend = MutableStateFlow<List<RatingTrend>?>(null)
-    val lxnsRatingTrend: StateFlow<List<RatingTrend>?> = _lxnsRatingTrend.asStateFlow()
-    private val _lxnsBest50 = MutableStateFlow<Best50?>(null)
-    val lxnsBest50: StateFlow<Best50?> = _lxnsBest50.asStateFlow()
     private val _isLoad = MutableStateFlow(false)
     val isLoad: StateFlow<Boolean> = _isLoad.asStateFlow()
 
@@ -48,9 +39,6 @@ class PlayerDataViewModel(
             // 只在 token 不为空时执行
             if (token.isNotEmpty()) {
                 _isLoad.value = false
-                loadRatingTrend(token)
-                loadPlayerLxns(token)
-                loadBest50(token)
             }
         }
     }
@@ -105,71 +93,6 @@ class PlayerDataViewModel(
                         }
                     }
                 }
-            }
-        }
-    }
-
-    /**
-     * 获取Rating趋势
-     * @param userToken 用户 Token，用于 API 认证
-     */
-    private fun loadRatingTrend(userToken: String) {
-        handleApiCall(
-            userToken = userToken,
-            apiCall = { lxnsApi.getPlayerTrend(it) },
-            onSuccess = { response ->
-                _lxnsRatingTrend.value = response.data
-            },
-            onRetry = { lxnsApi.getPlayerTrend(it) },
-        )
-    }
-
-    /**
-     * 获取玩家信息
-     * @param userToken 用户 Token，用于 API 认证
-     */
-    private fun loadPlayerLxns(userToken: String) {
-        handleApiCall(
-            userToken = userToken,
-            apiCall = { lxnsApi.getPlayerInfo(it) },
-            onSuccess = { response ->
-                _lxnsPlayerMaiInfo.value = response.data!!
-                _isLoad.value = true
-            },
-            onRetry = { lxnsApi.getPlayerInfo(it) },
-        )
-    }
-
-    /**
-     * 获取B50
-     * @param userToken 用户 Token，用于 API 认证
-     */
-    private fun loadBest50(userToken: String){
-        handleApiCall(
-            userToken = userToken,
-            apiCall = { lxnsApi.getPlayerB50(it) },
-            onSuccess = { response ->
-                _lxnsBest50.value = response.data
-                _isLoad.value = true
-            },
-            onRetry = { lxnsApi.getPlayerB50(it) }
-        )
-    }
-
-    /**
-     * 上传分数
-     */
-    fun uploadScoreLxns() {
-        viewModelScope.launch {
-            _error.value = null
-            try {
-                val currentPlayer = _lxnsPlayerMaiInfo.value
-                val success = false//playerApi.uploadPlayerInfo(currentPlayer)
-                if (!success) {
-                    _error.value = "上传分数失败"
-                }
-            } catch (e: Exception) {
-                _error.value = e.message ?: "上传分数失败"
             }
         }
     }

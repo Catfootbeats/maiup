@@ -5,6 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import xyz.catfootbeats.maiup.model.ApiResponse
+import xyz.catfootbeats.maiup.model.Best50
 import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.model.LxnsPlayerMai
 import xyz.catfootbeats.maiup.model.RatingTrend
@@ -49,6 +50,21 @@ class LxnsApi(
         return client.get("$baseUrl/user/${game.getApiName()}/player/trend") {
             header("X-User-Token", userToken)
             parameter("version", version)
+            contentType(ContentType.Application.Json)
+        }.body()
+    }
+
+    /**
+     * 获取玩家 Best 50
+     * @param userToken 用户 Token，用于 API 认证
+     * @return API 响应
+     */
+    suspend fun getPlayerB50(
+        userToken: String,
+        game: Game = Game.MAI,
+    ): ApiResponse<Best50> {
+        return client.get("$baseUrl/user/${game.getApiName()}/player/bests") {
+            header("X-User-Token", userToken)
             contentType(ContentType.Application.Json)
         }.body()
     }
