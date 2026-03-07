@@ -155,14 +155,20 @@ fun NavBar() {
                     scrollBehavior = topAppBarScrollBehavior,
                     actions = {
                         // 同步按钮
-                        IconButton(onClick = { showSyncSheet.value = true }) {
+                        IconButton(
+                            onClick = { showSyncSheet.value = true },
+                            enabled = false
+                        ) {
                             Icon(
                                 imageVector = MiuixIcons.Update,
                                 contentDescription = null
                             )
                         }
                         // 模式按钮
-                        IconButton(onClick = { showPopup.value = true }) {
+                        IconButton(
+                            onClick = { showPopup.value = true },
+                            enabled = false
+                        ) {
                             Icon(
                                 imageVector = MiuixIcons.Tune,
                                 contentDescription = null
