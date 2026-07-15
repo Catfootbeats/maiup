@@ -1,6 +1,7 @@
 package xyz.catfootbeats.maiup.ui.pages
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,69 +10,76 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.ColorPalette
 import top.yukonga.miuix.kmp.extra.SuperArrow
 import top.yukonga.miuix.kmp.extra.SuperSwitch
 import top.yukonga.miuix.kmp.extra.WindowDialog
 import top.yukonga.miuix.kmp.extra.WindowDropdown
-import top.yukonga.miuix.kmp.basic.ColorPalette
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import xyz.catfootbeats.maiup.AppConfig
 import xyz.catfootbeats.maiup.model.ThemeMode
 import xyz.catfootbeats.maiup.model.getName
-import xyz.catfootbeats.maiup.ui.components.*
 import xyz.catfootbeats.maiup.utils.openUrl
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
-import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
-
-const val OAuthURL = "https://maimai.lxns.net/oauth/authorize?response_type=code&client_id=6d445a1e-2c91-4a57-a029-6f7bc522c732&redirect_uri=http%3A%2F%2Flocalhost%3A5033%2Fcallback&scope=read_user_profile+read_player"
 
 @Composable
 fun SettingsPage() {
     val maiup: MaiupViewModel = koinViewModel()
     val settings by maiup.settings.collectAsState()
-    val playerDataViewModel: PlayerDataViewModel = koinViewModel()
+    val isAuthorizing by maiup.isAuthorizing.collectAsState()
+    val oauthError by maiup.oauthError.collectAsState()
 
-    // for ui
     val showColorDialog = remember { mutableStateOf(false) }
     var selectedColor by remember { mutableStateOf(settings.keyColor) }
-    val showLxnsDialog = remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Card {
-            SuperArrow(
-                title = "落雪设定",
-                summary = "数据来源",
-                onClick = { showLxnsDialog.value = true }
-            )
-            SuperArrow(
-                title = "落雪 OAuth 授权",
-                summary = "暂时还没做好喵~",
-                enabled = false,
-                onClick = {
-                    /*启动Http服务，监听回调，跳转到外部浏览器授权地址*/
-                    openUrl(OAuthURL)
-                }
+        // ---- OAuth ----
+         Card {
+             SuperArrow(
+                 title = "落雪 OAuth 授权",
+                 summary = when {
+                     isAuthorizing -> "授权中..."
+                     settings.isAuthorized -> "已授权"
+                     else -> "未授权"
+                 },
+                 onClick = { maiup.authorizeOAuth() }
+             )
+             if (settings.isAuthorized) {
+                 SuperArrow(
+                     title = "清除授权",
+                     summary = "移除访问令牌",
+                     onClick = { maiup.clearOAuth() }
+                 )
+             }
+         }
+
+        oauthError?.let { error ->
+            Text(
+                text = error,
+                color = MiuixTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
 
+        // ---- 主题 ----
         Card {
             WindowDropdown(
                 title = "主题",
                 items = ThemeMode.getList().map { it.getName() },
                 selectedIndex = settings.themeMode.ordinal,
-                onSelectedIndexChange = {
-                    maiup.updateTheme(ThemeMode.fromInt(it))
-                }
+                onSelectedIndexChange = { maiup.updateTheme(ThemeMode.fromInt(it)) }
             )
             SuperSwitch(
                 title = "动态取色",
@@ -80,18 +88,18 @@ fun SettingsPage() {
             )
             SuperArrow(
                 title = "选择颜色",
-                summary =
-                    "#" + settings.keyColor.value.toHexString(HexFormat.UpperCase).take(8),
+                summary = "#" + settings.keyColor.value.toHexString(HexFormat.UpperCase).take(8),
                 enabled = settings.isMonet,
                 onClick = { showColorDialog.value = true }
             )
         }
 
+        // ---- 关于 ----
         Card {
             SuperArrow(
                 title = "检查更新",
                 summary = "Version: ${AppConfig.VERSION_NAME}",
-                onClick = { /* TODO 检查更新 */ }
+                onClick = { /* TODO */ }
             )
             SuperArrow(
                 title = "查看源代码",
@@ -101,17 +109,28 @@ fun SettingsPage() {
         }
     }
 
+    // 授权中加载指示器
+    if (isAuthorizing) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator()
+                Spacer(Modifier.height(8.dp))
+                Text("等待浏览器授权...")
+            }
+        }
+    }
+
     WindowDialog(
         title = "选择颜色",
         show = showColorDialog,
-        onDismissRequest = { showColorDialog.value = false } // 关闭对话框
+        onDismissRequest = { showColorDialog.value = false }
     ) {
         Column {
-            ColorPalette(
-                color = selectedColor,
-                onColorChanged = { selectedColor = it }
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            ColorPalette(color = selectedColor, onColorChanged = { selectedColor = it })
+            Spacer(Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -119,49 +138,18 @@ fun SettingsPage() {
                 TextButton(
                     modifier = Modifier.weight(1f),
                     text = "取消",
-                    onClick = { showColorDialog.value = false } // 关闭对话框
+                    onClick = { showColorDialog.value = false }
                 )
                 TextButton(
                     modifier = Modifier.weight(1f),
                     text = "确定",
-                    colors = ButtonDefaults.textButtonColorsPrimary(), // 使用主题颜色
+                    colors = ButtonDefaults.textButtonColorsPrimary(),
                     onClick = {
-                        showColorDialog.value = false // 关闭对话框
+                        showColorDialog.value = false
                         maiup.updateKeyColor(selectedColor)
-                    })
-            }
-        }
-    }
-
-    WindowDialog(
-        title = "落雪设定",
-        summary = null,
-        show = showLxnsDialog,
-        onDismissRequest = {
-            if (!settings.lxnsToken.isEmpty()) {
-                showLxnsDialog.value = false
-                playerDataViewModel.reload(settings.lxnsToken)
-            }
-        } // 关闭对话框
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            PasswordTextField(
-                value = settings.lxnsToken,
-                lable = "落雪 API 密钥",
-                onValueChange = {
-                    maiup.updateLxnsToken(it)
-                },
-            )
-            TextButton(
-                text = "确定",
-                onClick = {
-                    if (!settings.lxnsToken.isEmpty()) {
-                        showLxnsDialog.value = false
-                        playerDataViewModel.reload(settings.lxnsToken)
                     }
-                }, // 关闭对话框
-                modifier = Modifier.fillMaxWidth()
-            )
+                )
+            }
         }
     }
 }

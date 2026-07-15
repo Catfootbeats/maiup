@@ -13,10 +13,9 @@ import xyz.catfootbeats.maiup.data.PreferenceRepository
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 
-
 val appModule = module {
     // ViewModel
-    viewModel { MaiupViewModel(get()) }
+    viewModel { MaiupViewModel(get(), get()) }
     viewModel { PlayerDataViewModel(get()) }
 
     // DataStore

@@ -8,76 +8,90 @@ import xyz.catfootbeats.maiup.model.ApiResponse
 import xyz.catfootbeats.maiup.model.Best50
 import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.model.LxnsPlayerMai
+import xyz.catfootbeats.maiup.model.OAuthTokenResponse
 import xyz.catfootbeats.maiup.model.RatingTrend
 import xyz.catfootbeats.maiup.model.Score
 import xyz.catfootbeats.maiup.model.getApiName
 
 const val apiUrl: String = "https://maimai.lxns.net/api/v0"
 
-/**
- * 玩家数据 API
- * @param client HttpClient 实例
- * @param baseUrl API 基础 URL
- */
 class LxnsApi(
     private val client: HttpClient,
     private val baseUrl: String = apiUrl
 ) {
 
-    /**
-     * 获取玩家信息
-     * @param userToken 用户 Token，用于 API 认证
-     * @return API 响应，包含玩家信息
-     */
-    suspend fun getPlayerInfo(userToken: String, game: Game = Game.MAI): ApiResponse<LxnsPlayerMai> {
+    // ---- OAuth 令牌（PKCE） ----
+
+    suspend fun exchangeToken(
+        clientId: String,
+        code: String,
+        redirectUri: String,
+        codeVerifier: String
+    ): ApiResponse<OAuthTokenResponse> {
+        return client.post("$baseUrl/oauth/token") {
+            contentType(ContentType.Application.Json)
+            setBody(mapOf(
+                "client_id" to clientId,
+                "grant_type" to "authorization_code",
+                "code" to code,
+                "redirect_uri" to redirectUri,
+                "code_verifier" to codeVerifier
+            ))
+        }.body()
+    }
+
+    suspend fun refreshToken(
+        clientId: String,
+        refreshToken: String
+    ): ApiResponse<OAuthTokenResponse> {
+        return client.post("$baseUrl/oauth/token") {
+            contentType(ContentType.Application.Json)
+            setBody(mapOf(
+                "client_id" to clientId,
+                "grant_type" to "refresh_token",
+                "refresh_token" to refreshToken
+            ))
+        }.body()
+    }
+
+    // ---- 玩家数据 API（Bearer 认证） ----
+
+    suspend fun getPlayerInfo(bearerToken: String, game: Game = Game.MAI): ApiResponse<LxnsPlayerMai> {
         return client.get("$baseUrl/user/${game.getApiName()}/player") {
-            header("X-User-Token", userToken)
+            header("Authorization", "Bearer $bearerToken")
             contentType(ContentType.Application.Json)
         }.body()
     }
 
-    /**
-     * 获取玩家 Rating 趋势
-     * @param userToken 用户 Token，用于 API 认证
-     * @param version 游戏版本号，默认为 25000
-     * @return API 响应，包含 Rating 趋势数据列表
-     */
     suspend fun getPlayerTrend(
-        userToken: String,
+        bearerToken: String,
         game: Game = Game.MAI,
         version: Int = 25000
     ): ApiResponse<List<RatingTrend>> {
         return client.get("$baseUrl/user/${game.getApiName()}/player/trend") {
-            header("X-User-Token", userToken)
+            header("Authorization", "Bearer $bearerToken")
             parameter("version", version)
             contentType(ContentType.Application.Json)
         }.body()
     }
 
-    /**
-     * 获取玩家 Best 50
-     * @param userToken 用户 Token，用于 API 认证
-     * @return API 响应
-     */
     suspend fun getPlayerB50(
-        userToken: String,
+        bearerToken: String,
         game: Game = Game.MAI,
     ): ApiResponse<Best50> {
         return client.get("$baseUrl/user/${game.getApiName()}/player/bests") {
-            header("X-User-Token", userToken)
+            header("Authorization", "Bearer $bearerToken")
             contentType(ContentType.Application.Json)
         }.body()
     }
 
-    /**
-     * 上传玩家成绩
-     * @param userToken 用户 Token，用于 API 认证
-     * @param scores 玩家成绩列表
-     * @return API 响应，包含上传结果
-     */
-    suspend fun uploadPlayerScores(userToken: String, scores: List<Score>, game: Game = Game.MAI): ApiResponse<Unit> {
+    suspend fun uploadPlayerScores(
+        bearerToken: String,
+        scores: List<Score>,
+        game: Game = Game.MAI
+    ): ApiResponse<Unit> {
         return client.post("$baseUrl/user/${game.getApiName()}/player/scores") {
-            header("X-User-Token", userToken)
+            header("Authorization", "Bearer $bearerToken")
             contentType(ContentType.Application.Json)
             setBody(mapOf("scores" to scores))
         }.body()
