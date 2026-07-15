@@ -40,7 +40,6 @@ fun SettingsPage() {
     val showColorDialog = remember { mutableStateOf(false) }
     var selectedColor by remember { mutableStateOf(settings.keyColor) }
     val showLxnsDialog = remember { mutableStateOf(false) }
-    val showWaterfishDialog = remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -62,12 +61,6 @@ fun SettingsPage() {
                     /*启动Http服务，监听回调，跳转到外部浏览器授权地址*/
                     openUrl(OAuthURL)
                 }
-            )
-            SuperArrow(
-                title = "水鱼设定",
-                summary = "暂未支持 / 仅同步数据",
-                enabled = false,
-                onClick = { /* TODO 检查更新 */ }
             )
         }
 
@@ -167,27 +160,6 @@ fun SettingsPage() {
                         playerDataViewModel.reload(settings.lxnsToken)
                     }
                 }, // 关闭对话框
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
-    WindowDialog(
-        title = "水鱼设定",
-        summary = null,
-        show = showWaterfishDialog,
-        onDismissRequest = { showWaterfishDialog.value = false } // 关闭对话框
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            PasswordTextField(
-                value = settings.waterfishToken,
-                lable = "水鱼 Token",
-                onValueChange = {
-                    maiup.updateWaterfishToken(it)
-                },
-            )
-            TextButton(
-                text = "确定",
-                onClick = { showLxnsDialog.value = false }, // 关闭对话框
                 modifier = Modifier.fillMaxWidth()
             )
         }

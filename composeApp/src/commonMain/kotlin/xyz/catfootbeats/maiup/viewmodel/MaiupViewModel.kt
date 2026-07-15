@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import xyz.catfootbeats.maiup.data.MaiupSettings
 import xyz.catfootbeats.maiup.data.PreferenceRepository
-import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.model.ThemeMode
 
 class MaiupViewModel(
@@ -25,10 +24,6 @@ class MaiupViewModel(
         }
     }
 
-    fun updateAppMode(game: Game) {
-        _settings.value = _settings.value.copy(game = game)
-        viewModelScope.launch { preferenceRepository.updateAppMode(game) }
-    }
     fun updateKeyColor(keyColor: Color) {
         _settings.value = _settings.value.copy(keyColor = keyColor)
         viewModelScope.launch { preferenceRepository.updateKeyColor(keyColor) }

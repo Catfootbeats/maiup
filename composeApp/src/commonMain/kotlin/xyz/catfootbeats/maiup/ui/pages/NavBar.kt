@@ -16,13 +16,10 @@ import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.extra.LocalWindowBottomSheetState
 import top.yukonga.miuix.kmp.extra.SuperCheckbox
 import top.yukonga.miuix.kmp.extra.WindowBottomSheet
-import top.yukonga.miuix.kmp.extra.WindowListPopup
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.*
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
-import xyz.catfootbeats.maiup.model.Game
-import xyz.catfootbeats.maiup.model.getName
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 
 enum class AppDestinations(
@@ -30,16 +27,9 @@ enum class AppDestinations(
     val icon: ImageVector,
     val desc: String,
 ) {
-    // 首页 直接显示用户的成绩 头像 收藏品 背景框 点击即可跳转更新成绩 可以改变中二模式和舞萌模式
     HOME("首页", MiuixIcons.Contacts, "账号详情"),
-
-    // 搜索 可以查找游玩的歌曲
     SEARCH("搜索", MiuixIcons.Music, "搜索"),
-
-    // 成绩 可以查看 b50 与 历史成绩
     RANK("成绩", MiuixIcons.TopDownloads, "成绩"),
-
-    // 设置 用于设置查分器 同步成绩设定
     SETTINGS("设置", MiuixIcons.Settings, "设置"),
 }
 
@@ -55,25 +45,18 @@ fun NavBar() {
         backgroundColor = MiuixTheme.colorScheme.surface,
         tint = HazeTint(MiuixTheme.colorScheme.surface.copy(0.1f))
     )
-    // 顶部模式栏
-    val showPopup = remember { mutableStateOf(false) }
-    val popupItems = listOf(Game.MAI, Game.CHU)
     // 同步对话框
     val showSyncSheet = remember { mutableStateOf(false) }
 
     val settings by maiupViewModel.settings.collectAsState()
     var upMai by remember { mutableStateOf(true) }
-    var upChu by remember { mutableStateOf(false) }
     var upLxns by remember { mutableStateOf(settings.lxnsToken.isNotEmpty()) }
     var upWaterfish by remember { mutableStateOf(settings.waterfishToken.isNotEmpty()) }
-
-
 
     val topAppBarScrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
 
     // 等待设置加载完成并延迟一秒
     LaunchedEffect(settings) {
-        // 根据token状态更新同步选项
         upLxns = settings.lxnsToken.isNotEmpty()
         upWaterfish = settings.waterfishToken.isNotEmpty()
     }
@@ -91,11 +74,6 @@ fun NavBar() {
                     title = "舞萌DX",
                     checked = upMai,
                     onCheckedChange = { upMai = it }
-                )
-                SuperCheckbox(
-                    title = "中二节奏",
-                    checked = upChu,
-                    onCheckedChange = { upChu = it }
                 )
                 HorizontalDivider()
                 SuperCheckbox(
@@ -164,36 +142,6 @@ fun NavBar() {
                                 contentDescription = null
                             )
                         }
-                        // 模式按钮
-                        IconButton(
-                            onClick = { showPopup.value = true },
-                            enabled = false
-                        ) {
-                            Icon(
-                                imageVector = MiuixIcons.Tune,
-                                contentDescription = null
-                            )
-                        }
-                        WindowListPopup(
-                            show = showPopup,
-                            alignment = PopupPositionProvider.Align.Start,
-                            onDismissRequest = { showPopup.value = false } // 关闭弹窗菜单
-                        ) {
-                            ListPopupColumn {
-                                popupItems.forEachIndexed { index, game ->
-                                    DropdownImpl(
-                                        text = game.getName(),
-                                        optionSize = popupItems.size,
-                                        isSelected = settings.game == game,
-                                        onSelectedIndexChange = {
-                                            maiupViewModel.updateAppMode(game)
-                                            showPopup.value = false // 关闭弹窗菜单
-                                        },
-                                        index = index
-                                    )
-                                }
-                            }
-                        }
                         Spacer(modifier = Modifier.width(16.dp))
                     }
                 )
@@ -226,9 +174,7 @@ fun NavBar() {
                 modifier = Modifier
                     .fillMaxSize()
                     .hazeSource(state = hazeState)
-                    // 如需添加越界回弹效果，则应在绑定滚动行为之前添加
                     .overScrollVertical()
-                    // 绑定 TopAppBar 滚动事件
                     .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
                 contentPadding = PaddingValues(top = paddingValues.calculateTopPadding())
             ) {

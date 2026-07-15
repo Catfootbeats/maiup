@@ -2,175 +2,98 @@ package xyz.catfootbeats.maiup.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import xyz.catfootbeats.maiup.api.LxnsApi
-import xyz.catfootbeats.maiup.model.ApiResponse
 import xyz.catfootbeats.maiup.model.Best50
 import xyz.catfootbeats.maiup.model.LxnsPlayerMai
 import xyz.catfootbeats.maiup.model.RatingTrend
+import xyz.catfootbeats.maiup.utils.ApiCallHandler
 
 class PlayerDataViewModel(
     private val lxnsApi: LxnsApi,
-    private val maiupViewModel: MaiupViewModel
 ) : ViewModel() {
+    private val apiHandler = ApiCallHandler(viewModelScope)
+
     private val _lxnsPlayerMaiInfo = MutableStateFlow(LxnsPlayerMai())
     val lxnsPlayerMaiInfo: StateFlow<LxnsPlayerMai> = _lxnsPlayerMaiInfo.asStateFlow()
+
     private val _lxnsRatingTrend = MutableStateFlow<List<RatingTrend>?>(null)
     val lxnsRatingTrend: StateFlow<List<RatingTrend>?> = _lxnsRatingTrend.asStateFlow()
+
     private val _lxnsBest50 = MutableStateFlow<Best50?>(null)
     val lxnsBest50: StateFlow<Best50?> = _lxnsBest50.asStateFlow()
+
     private val _isLoad = MutableStateFlow(false)
     val isLoad: StateFlow<Boolean> = _isLoad.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private var retryJob: Job? = null
-
-    init {
-        viewModelScope.launch {
-            maiupViewModel.settings.collect { settings ->
-                val token = settings.lxnsToken
-                reload(token)
-            }
-        }
-    }
+    private var loadCounter = 0
 
     fun reload(token: String) {
-        // 取消之前的重试任务
-        retryJob?.cancel()
-        viewModelScope.launch {
-            // 只在 token 不为空时执行
-            if (token.isNotEmpty()) {
-                _isLoad.value = false
-                loadRatingTrend(token)
-                loadPlayerLxns(token)
-                loadBest50(token)
-            }
-        }
-    }
-
-    /**
-     * 通用API请求处理函数
-     * @param userToken 用户 Token
-     * @param apiCall API调用函数
-     * @param onSuccess 成功回调
-     * @param onFailed 失败回调
-     * @param onRetry 重试回调
-     */
-    private fun <T> handleApiCall(
-        userToken: String,
-        apiCall: suspend (String) -> ApiResponse<T>,
-        onSuccess: (ApiResponse<T>) -> Unit,
-        onFailed: (ApiResponse<T>) -> Unit = {},
-        onRetry: suspend (String) -> ApiResponse<T>
-    ) {
+        apiHandler.cancelRetry()
+        if (token.isEmpty()) return
+        _isLoad.value = false
         _error.value = null
-        viewModelScope.launch {
-            try {
-                val response = apiCall(userToken)
-                when {
-                    response.success && response.code == 200 -> onSuccess(response)
-                    response.code == 401 -> {
-                        _error.value = "落雪查分器 Token 错误喵"
-                        onFailed(response)
-                    }
-                    else -> {
-                        _error.value = "获取玩家信息失败: ${response.code}喵"
-                        onFailed(response)
-                    }
-                }
-            } catch (e: Exception) {
-                if (e.message?.contains("No address associated with hostname") == true) {
-                    _error.value = "你没联网喵~"
-                } else {
-                    _error.value = e.message ?: "请求失败喵"
-                }
-                // 失败后每隔5秒重试
-                retryJob = viewModelScope.launch {
-                    while (true) {
-                        delay(5000)
-                        try {
-                            val response = onRetry(userToken)
-                            onSuccess(response)
-                            _error.value = null
-                            break
-                        } catch (_: Exception) {
-                            // 继续重试
-                        }
-                    }
-                }
-            }
+        loadCounter = 0
+        loadRatingTrend(token)
+        loadPlayerLxns(token)
+        loadBest50(token)
+    }
+
+    private fun onApiComplete() {
+        loadCounter++
+        if (loadCounter >= 3) {
+            _isLoad.value = true
         }
     }
 
-    /**
-     * 获取Rating趋势
-     * @param userToken 用户 Token，用于 API 认证
-     */
-    private fun loadRatingTrend(userToken: String) {
-        handleApiCall(
-            userToken = userToken,
-            apiCall = { lxnsApi.getPlayerTrend(it) },
-            onSuccess = { response ->
-                _lxnsRatingTrend.value = response.data
+    private fun loadRatingTrend(token: String) {
+        apiHandler.call(
+            apiCall = { lxnsApi.getPlayerTrend(token) },
+            onSuccess = {
+                _lxnsRatingTrend.value = it
+                onApiComplete()
             },
-            onRetry = { lxnsApi.getPlayerTrend(it) },
+            onError = {
+                _error.value = it
+                onApiComplete()
+            }
         )
     }
 
-    /**
-     * 获取玩家信息
-     * @param userToken 用户 Token，用于 API 认证
-     */
-    private fun loadPlayerLxns(userToken: String) {
-        handleApiCall(
-            userToken = userToken,
-            apiCall = { lxnsApi.getPlayerInfo(it) },
-            onSuccess = { response ->
-                _lxnsPlayerMaiInfo.value = response.data!!
-                _isLoad.value = true
+    private fun loadPlayerLxns(token: String) {
+        apiHandler.call(
+            apiCall = { lxnsApi.getPlayerInfo(token) },
+            onSuccess = {
+                if (it != null) _lxnsPlayerMaiInfo.value = it
+                onApiComplete()
             },
-            onRetry = { lxnsApi.getPlayerInfo(it) },
+            onError = {
+                _error.value = it
+                onApiComplete()
+            }
         )
     }
 
-    /**
-     * 获取B50
-     * @param userToken 用户 Token，用于 API 认证
-     */
-    private fun loadBest50(userToken: String){
-        handleApiCall(
-            userToken = userToken,
-            apiCall = { lxnsApi.getPlayerB50(it) },
-            onSuccess = { response ->
-                _lxnsBest50.value = response.data
-                _isLoad.value = true
+    private fun loadBest50(token: String) {
+        apiHandler.call(
+            apiCall = { lxnsApi.getPlayerB50(token) },
+            onSuccess = {
+                if (it != null) _lxnsBest50.value = it
+                onApiComplete()
             },
-            onRetry = { lxnsApi.getPlayerB50(it) }
+            onError = {
+                _error.value = it
+                onApiComplete()
+            }
         )
     }
 
-    /**
-     * 上传分数
-     */
     fun uploadScoreLxns() {
-        viewModelScope.launch {
-            _error.value = null
-            try {
-                val currentPlayer = _lxnsPlayerMaiInfo.value
-                val success = false//playerApi.uploadPlayerInfo(currentPlayer)
-                if (!success) {
-                    _error.value = "上传分数失败"
-                }
-            } catch (e: Exception) {
-                _error.value = e.message ?: "上传分数失败"
-            }
-        }
+        // TODO: implement upload via lxnsApi.uploadPlayerScores()
     }
 }

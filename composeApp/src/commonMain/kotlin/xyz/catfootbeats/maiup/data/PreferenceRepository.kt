@@ -10,13 +10,11 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import xyz.catfootbeats.maiup.data.MaiupSettings.Companion.DEFAULT_APP_MODE
 import xyz.catfootbeats.maiup.data.MaiupSettings.Companion.DEFAULT_IS_MONET
 import xyz.catfootbeats.maiup.data.MaiupSettings.Companion.DEFAULT_LXNS_API
 import xyz.catfootbeats.maiup.data.MaiupSettings.Companion.DEFAULT_THEME_MODE
 import xyz.catfootbeats.maiup.data.MaiupSettings.Companion.DEFAULT_WATERFISH_TOKEN
 import xyz.catfootbeats.maiup.data.MaiupSettings.Companion.DEFAULT_KEY_COLOR
-import xyz.catfootbeats.maiup.model.Game
 import xyz.catfootbeats.maiup.model.ThemeMode
 
 data class MaiupSettings(
@@ -27,8 +25,6 @@ data class MaiupSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val isMonet: Boolean = false,
     val keyColor: Color = Color(0xFF66CCFF),
-    // 模式
-    val game: Game = Game.MAI
 ) {
     companion object {
         // token
@@ -39,9 +35,6 @@ data class MaiupSettings(
         val DEFAULT_THEME_MODE = ThemeMode.SYSTEM
         const val DEFAULT_IS_MONET = false
         val DEFAULT_KEY_COLOR = Color(0xFF66CCFF)
-
-        // 模式
-        val DEFAULT_APP_MODE = Game.CHU
     }
 }
 
@@ -53,7 +46,6 @@ class PreferenceRepository(
     private val themeModeKey = stringPreferencesKey("theme_mode")
     private val isMonetKey = booleanPreferencesKey("is_monet")
     private val keyColorKey = intPreferencesKey("key_color")
-    private val appModeKey = stringPreferencesKey("app_mode")
 
     val settings: Flow<MaiupSettings> = dataStore.data.map {
         MaiupSettings(
@@ -67,19 +59,7 @@ class PreferenceRepository(
             },
             isMonet = it[isMonetKey] ?: DEFAULT_IS_MONET,
             keyColor = Color(it[keyColorKey] ?: DEFAULT_KEY_COLOR.toArgb()),
-
-            game = try {
-                Game.valueOf(it[appModeKey] ?: DEFAULT_APP_MODE.name)
-            } catch (_: IllegalArgumentException) {
-                DEFAULT_APP_MODE
-            }
         )
-    }
-
-    suspend fun updateAppMode(game: Game) {
-        dataStore.edit {
-            it[appModeKey] = game.name
-        }
     }
 
     suspend fun updateKeyColor(keyColor: Color) {

@@ -32,14 +32,21 @@ fun HomePage() {
     val ratingTrend by playerDataViewModel.lxnsRatingTrend.collectAsState()
     val dataError by playerDataViewModel.error.collectAsState()
 
-    // 检测lxnsToken是否为空
-    val settings by maiupViewModel.settings.collectAsState()
+     val settings by maiupViewModel.settings.collectAsState()
+     // 检测lxnsToken是否为空
     val showTokenDialog = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         // 延迟一秒后再检测
-        delay(1000)
-        showTokenDialog.value = settings.lxnsToken.isEmpty()
+         delay(1000)
+         showTokenDialog.value = settings.lxnsToken.isEmpty()
     }
+ 
+     // Token 变化时自动重新加载玩家数据
+     LaunchedEffect(settings.lxnsToken) {
+         if (settings.lxnsToken.isNotEmpty()) {
+             playerDataViewModel.reload(settings.lxnsToken)
+         }
+     }
 
     // Token输入对话框
     WindowDialog(
