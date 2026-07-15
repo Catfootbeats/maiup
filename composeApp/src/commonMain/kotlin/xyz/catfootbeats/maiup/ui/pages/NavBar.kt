@@ -2,7 +2,8 @@ package xyz.catfootbeats.maiup.ui.pages
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -22,8 +23,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.*
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
- import xyz.catfootbeats.maiup.ui.pages.LoginPage
- import xyz.catfootbeats.maiup.resources.Res
+import xyz.catfootbeats.maiup.resources.Res
  import xyz.catfootbeats.maiup.resources.mai
  import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 
@@ -35,7 +35,7 @@ enum class AppDestinations(
     HOME("首页", MiuixIcons.Contacts, "账号详情"),
     SYNC("同步", MiuixIcons.Update, "数据同步"),
     SEARCH("搜索", MiuixIcons.Music, "搜索"),
-    RANK("成绩", MiuixIcons.TopDownloads, "成绩"),
+    B50("B50", MiuixIcons.TopDownloads, "B50"),
     SETTINGS("设置", MiuixIcons.Settings, "设置"),
 }
 
@@ -144,24 +144,22 @@ fun NavBar() {
                 }
             }
         ) { paddingValues ->
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .hazeSource(state = hazeState)
                     .overScrollVertical()
-                    .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
-                contentPadding = PaddingValues(top = paddingValues.calculateTopPadding())
+                    .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
+                    .padding(top = paddingValues.calculateTopPadding())
             ) {
-                item {
-                    when (currentDestination) {
-                        AppDestinations.HOME -> HomePage()
-                        AppDestinations.SYNC -> SyncPage()
-                        AppDestinations.SEARCH -> SearchPage()
-                        AppDestinations.RANK -> RankPage()
-                        AppDestinations.SETTINGS -> SettingsPage()
-                    }
-                    Spacer(Modifier.height(72.dp))
+                when (currentDestination) {
+                    AppDestinations.HOME -> HomePage()
+                    AppDestinations.SYNC -> SyncPage()
+                    AppDestinations.SEARCH -> SearchPage()
+                    AppDestinations.B50 -> B50Page()
+                    AppDestinations.SETTINGS -> SettingsPage()
                 }
+                Spacer(Modifier.height(72.dp))
             }
         }
     }

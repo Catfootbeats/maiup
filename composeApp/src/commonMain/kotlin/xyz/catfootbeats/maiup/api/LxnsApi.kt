@@ -11,6 +11,7 @@ import xyz.catfootbeats.maiup.model.LxnsPlayerMai
 import xyz.catfootbeats.maiup.model.OAuthTokenResponse
 import xyz.catfootbeats.maiup.model.RatingTrend
 import xyz.catfootbeats.maiup.model.Score
+import xyz.catfootbeats.maiup.model.SongListResponse
 import xyz.catfootbeats.maiup.model.getApiName
 
 const val apiUrl: String = "https://maimai.lxns.net/api/v0"
@@ -94,6 +95,27 @@ class LxnsApi(
             header("Authorization", "Bearer $bearerToken")
             contentType(ContentType.Application.Json)
             setBody(mapOf("scores" to scores))
+        }.body()
+    }
+
+    // ---- 历史成绩 ----
+
+    suspend fun getPlayerScores(
+        bearerToken: String,
+        game: Game = Game.MAI
+    ): ApiResponse<List<Score>> {
+        return client.get("$baseUrl/user/${game.getApiName()}/player/scores") {
+            header("Authorization", "Bearer $bearerToken")
+            contentType(ContentType.Application.Json)
+        }.body()
+    }
+
+    // ---- 曲目数据（公共接口） ----
+
+    suspend fun getSongList(version: Int = 25500): ApiResponse<SongListResponse> {
+        return client.get("$baseUrl/maimai/song/list") {
+            parameter("version", version)
+            contentType(ContentType.Application.Json)
         }.body()
     }
 }

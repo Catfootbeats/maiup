@@ -10,6 +10,7 @@ import xyz.catfootbeats.maiup.api.HttpClientFactory
 import xyz.catfootbeats.maiup.api.LxnsApi
 import xyz.catfootbeats.maiup.data.DataStoreFactory
 import xyz.catfootbeats.maiup.data.PreferenceRepository
+import xyz.catfootbeats.maiup.viewmodel.SearchViewModel
 import xyz.catfootbeats.maiup.viewmodel.MaiupViewModel
 import xyz.catfootbeats.maiup.viewmodel.PlayerDataViewModel
 
@@ -17,6 +18,7 @@ val appModule = module {
     // ViewModel
     viewModel { MaiupViewModel(get(), get()) }
     viewModel { PlayerDataViewModel(get()) }
+    viewModel { SearchViewModel(get()) }
 
     // DataStore
     singleOf(::DataStoreFactory)

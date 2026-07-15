@@ -1,6 +1,8 @@
 package xyz.catfootbeats.maiup.ui.pages
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,9 +38,12 @@ fun HomePage() {
              playerDataViewModel.reload(token)
          }
     }
-
+    val scrollState = rememberScrollState()
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(scrollState),
     ) {
         if (!hasData && !isRefreshing) {
             if (!settings.isAuthorized) {
