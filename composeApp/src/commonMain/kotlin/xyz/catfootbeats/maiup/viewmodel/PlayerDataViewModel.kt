@@ -1,8 +1,8 @@
 package xyz.catfootbeats.maiup.viewmodel
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
+ import androidx.lifecycle.ViewModel
+ import androidx.lifecycle.viewModelScope
+ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import xyz.catfootbeats.maiup.api.LxnsApi
@@ -25,71 +25,65 @@ class PlayerDataViewModel(
     private val _lxnsBest50 = MutableStateFlow<Best50?>(null)
     val lxnsBest50: StateFlow<Best50?> = _lxnsBest50.asStateFlow()
 
-    private val _isLoad = MutableStateFlow(false)
-    val isLoad: StateFlow<Boolean> = _isLoad.asStateFlow()
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    private val _hasData = MutableStateFlow(false)
+    val hasData: StateFlow<Boolean> = _hasData.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
     private var loadCounter = 0
+    private var successCount = 0
+    private val errors = mutableListOf<String>()
 
     fun reload(token: String) {
-        apiHandler.cancelRetry()
-        if (token.isEmpty()) return
-        _isLoad.value = false
-        _error.value = null
-        loadCounter = 0
-        loadRatingTrend(token)
-        loadPlayerLxns(token)
-        loadBest50(token)
+         if (_isRefreshing.value) return
+         apiHandler.cancelAll()
+         if (token.isEmpty()) return
+         _isRefreshing.value = true
+         _error.value = null
+         loadCounter = 0
+         successCount = 0
+         errors.clear()
+         loadRatingTrend(token)
+         loadPlayerLxns(token)
+         loadBest50(token)
     }
 
-    private fun onApiComplete() {
+    private fun onApiComplete(success: Boolean, errorMsg: String? = null) {
         loadCounter++
+        if (success) successCount++
+        if (errorMsg != null) errors.add(errorMsg)
         if (loadCounter >= 3) {
-            _isLoad.value = true
+            _isRefreshing.value = false
+            _hasData.value = successCount > 0
+            _error.value = errors.takeIf { it.isNotEmpty() }?.joinToString("\n")
         }
     }
 
     private fun loadRatingTrend(token: String) {
         apiHandler.call(
             apiCall = { lxnsApi.getPlayerTrend(token) },
-            onSuccess = {
-                _lxnsRatingTrend.value = it
-                onApiComplete()
-            },
-            onError = {
-                _error.value = it
-                onApiComplete()
-            }
+            onSuccess = { _lxnsRatingTrend.value = it; onApiComplete(success = true) },
+            onError = { onApiComplete(success = false, errorMsg = it) }
         )
     }
 
     private fun loadPlayerLxns(token: String) {
         apiHandler.call(
             apiCall = { lxnsApi.getPlayerInfo(token) },
-            onSuccess = {
-                if (it != null) _lxnsPlayerMaiInfo.value = it
-                onApiComplete()
-            },
-            onError = {
-                _error.value = it
-                onApiComplete()
-            }
+            onSuccess = { if (it != null) _lxnsPlayerMaiInfo.value = it; onApiComplete(success = true) },
+            onError = { onApiComplete(success = false, errorMsg = it) }
         )
     }
 
     private fun loadBest50(token: String) {
         apiHandler.call(
             apiCall = { lxnsApi.getPlayerB50(token) },
-            onSuccess = {
-                if (it != null) _lxnsBest50.value = it
-                onApiComplete()
-            },
-            onError = {
-                _error.value = it
-                onApiComplete()
-            }
+            onSuccess = { if (it != null) _lxnsBest50.value = it; onApiComplete(success = true) },
+            onError = { onApiComplete(success = false, errorMsg = it) }
         )
     }
 
